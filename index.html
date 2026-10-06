@@ -15,134 +15,437 @@
   <!-- ROOT APPLICATION CONTAINER -->
   <div id="app">
 
-    <!-- GUIDED DEMO STEPPER BAR (TOP FOR COLLEGE HACKATHON PRESENTATION) -->
-    <header id="demo-tour-bar" class="demo-stepper-bar" style="display: none;">
-      <div class="demo-stepper-label">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
-        <span>Demo Flow</span>
-      </div>
-      <div class="demo-steps-track" id="demo-steps-container">
-        <!-- Generated dynamically in app.js -->
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="btn-restart-demo" class="btn btn-sm btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; color: #93c5fd; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08);">
-          ↺ Reset Demo
-        </button>
-      </div>
-    </header>
-
-    <!-- 1. AUTH / LOGIN VIEW (INITIAL SCREEN) -->
-    <div id="view-auth" class="auth-page-wrapper">
-      <div class="auth-bg-decor"></div>
-      <div class="auth-bg-decor-2"></div>
-
-      <div class="auth-container">
-        <!-- Left Branding Panel -->
-        <div class="auth-branding-panel">
-          <div class="brand-header">
-            <div class="brand-logo-lockup">
-              <div class="brand-icon-box">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <polyline points="16 11 18 13 22 9"></polyline>
-                </svg>
-              </div>
-              <div>
+    <!-- 1. AWARD-WINNING LANDING & ONBOARDING / LOGIN VIEW (INITIAL SCREEN) -->
+    <div id="view-auth" class="landing-page-root">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="landing-navbar">
+        <div class="landing-nav-container">
+          <a href="#hero" class="brand-logo-lockup">
+            <div class="brand-icon-box">
+              <!-- Human & Community Help Shield Icon -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div class="brand-text-block">
+              <div class="brand-name-row">
                 <span class="brand-name">Sahayak</span>
-                <span class="brand-badge">PRO</span>
+                <span class="brand-tag-pill">PORTAL</span>
               </div>
+              <span class="brand-subtext">Connecting People. Mobilizing Impact.</span>
+            </div>
+          </a>
+
+          <nav class="landing-nav-links">
+            <a href="#how-it-works" class="nav-link">How It Works</a>
+            <a href="#value-props" class="nav-link">Features</a>
+            <a href="#flow-section" class="nav-link">Coordination Flow</a>
+            <a href="#impact-metrics" class="nav-link">Impact</a>
+            <a href="#onboarding" class="nav-link nav-link-highlight">Role Portal</a>
+          </nav>
+
+          <div class="landing-nav-actions">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('onboarding').scrollIntoView({ behavior: 'smooth' });">
+              Sign In
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('onboarding').scrollIntoView({ behavior: 'smooth' });">
+              Get Started →
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- HERO SECTION -->
+      <section id="hero" class="hero-section">
+        <div class="hero-bg-accent"></div>
+        <div class="hero-bg-accent-2"></div>
+        <div class="landing-container">
+          
+          <div class="hero-content-wrap">
+            <!-- Civic-Tech Trust Badge -->
+            <div class="hero-badge">
+              <span class="badge-dot-live"></span>
+              <span>Civic-Tech Social Impact &amp; Volunteer Dispatch Platform</span>
             </div>
 
-            <h1 class="brand-tagline">“Connecting Skills. Coordinating Service. Creating Impact.”</h1>
-            <p class="brand-desc">
-              Sahayak is an intelligent volunteer operations and deployment platform. We bridge verified community volunteers with frontline NGOs and emergency responders using AI-powered skill matching and live geo-tracking.
+            <h1 class="hero-headline">
+              The smarter way to coordinate volunteers and <span class="highlight-text">create community impact.</span>
+            </h1>
+
+            <p class="hero-subhead">
+              Sahayak is an intelligent coordination platform bridging verified grassroots volunteers with frontline NGOs and emergency responders through AI skill-matching, real-time dispatch, and geo-verified tracking.
             </p>
 
-            <div class="auth-features-list">
-              <div class="auth-feature-item">
-                <div class="auth-feature-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </div>
-                <span><strong>AI Smart Match:</strong> Multi-factor skill, distance & availability scoring.</span>
+            <div class="hero-cta-group">
+              <button type="button" class="btn btn-lg btn-primary" onclick="document.getElementById('onboarding').scrollIntoView({ behavior: 'smooth' });">
+                Get Started
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+              <button type="button" class="btn btn-lg btn-secondary" onclick="document.getElementById('value-props').scrollIntoView({ behavior: 'smooth' });">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Explore Features
+              </button>
+            </div>
+
+            <!-- SUBTLE VOLUNTEER COORDINATION FLOW VISUAL -->
+            <div id="flow-section" class="coordination-flow-card">
+              <div class="coordination-flow-header">
+                <span class="flow-header-label">END-TO-END VOLUNTEER COORDINATION LIFECYCLE</span>
+                <span class="flow-header-status">● Live Engine Active</span>
               </div>
-              <div class="auth-feature-item">
-                <div class="auth-feature-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <div class="flow-pipeline-track">
+                <div class="flow-step-item active">
+                  <div class="flow-step-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                  </div>
+                  <div class="flow-step-text">
+                    <div class="flow-step-name">1. Request</div>
+                    <div class="flow-step-desc">Requirement Posted</div>
+                  </div>
                 </div>
-                <span><strong>End-to-End Tracking:</strong> POSTED → MATCHED → DEPLOYED → COMPLETED.</span>
-              </div>
-              <div class="auth-feature-item">
-                <div class="auth-feature-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+
+                <div class="flow-pipeline-arrow">→</div>
+
+                <div class="flow-step-item active highlight-ai">
+                  <div class="flow-step-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  </div>
+                  <div class="flow-step-text">
+                    <div class="flow-step-name">2. Smart Match</div>
+                    <div class="flow-step-desc">92% AI Compatibility</div>
+                  </div>
                 </div>
-                <span><strong>Emergency SOS Dispatch:</strong> Sub-15 minute community disaster mobilization.</span>
+
+                <div class="flow-pipeline-arrow">→</div>
+
+                <div class="flow-step-item">
+                  <div class="flow-step-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"></path><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  </div>
+                  <div class="flow-step-text">
+                    <div class="flow-step-name">3. Dispatch</div>
+                    <div class="flow-step-desc">Shift Scheduling</div>
+                  </div>
+                </div>
+
+                <div class="flow-pipeline-arrow">→</div>
+
+                <div class="flow-step-item">
+                  <div class="flow-step-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  </div>
+                  <div class="flow-step-text">
+                    <div class="flow-step-name">4. Track</div>
+                    <div class="flow-step-desc">GPS &amp; Telemetry</div>
+                  </div>
+                </div>
+
+                <div class="flow-pipeline-arrow">→</div>
+
+                <div class="flow-step-item">
+                  <div class="flow-step-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                  </div>
+                  <div class="flow-step-text">
+                    <div class="flow-step-name">5. Impact</div>
+                    <div class="flow-step-desc">Verified Certificate</div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- REAL-TIME STYLE ACTIVITY FEED PANEL -->
+            <div class="realtime-activity-panel">
+              <div class="activity-panel-header">
+                <div class="activity-live-indicator">
+                  <span class="pulse-green-dot"></span>
+                  <span class="activity-header-title">Live Field Activity Feed</span>
+                </div>
+                <span class="activity-feed-time">Updated Just Now</span>
+              </div>
+
+              <div class="activity-feed-items">
+                <div class="activity-feed-item">
+                  <div class="activity-icon-badge success">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
+                  <div class="activity-item-content">
+                    <span class="activity-item-text"><strong>12 volunteers matched</strong> for Community Health Camp (Andheri West)</span>
+                    <span class="activity-item-timestamp">Just now</span>
+                  </div>
+                </div>
+
+                <div class="activity-feed-item">
+                  <div class="activity-icon-badge danger">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                  </div>
+                  <div class="activity-item-content">
+                    <span class="activity-item-text"><strong>Emergency SOS request received:</strong> High-priority flood relief mobilization in Kurla Sector</span>
+                    <span class="activity-item-timestamp">2 mins ago</span>
+                  </div>
+                </div>
+
+                <div class="activity-feed-item">
+                  <div class="activity-icon-badge primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                  </div>
+                  <div class="activity-item-content">
+                    <span class="activity-item-text"><strong>8 volunteers deployed</strong> &amp; GPS on-site verified at Base Camp</span>
+                    <span class="activity-item-timestamp">5 mins ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <div class="brand-footer-stats">
-            <div>
-              <div class="brand-stat-num">1,240+</div>
-              <div class="brand-stat-lbl">Active Volunteers</div>
+        </div>
+      </section>
+
+      <!-- 4 KEY VALUE PROPOSITIONS SECTION -->
+      <section id="value-props" class="landing-section value-props-section">
+        <div class="landing-container">
+          <div class="section-header-block">
+            <span class="section-kicker">CORE PLATFORM CAPABILITIES</span>
+            <h2 class="section-title">Built for Real-World Community &amp; Disaster Mobilization</h2>
+            <p class="section-subtitle">Engineered to eliminate coordinator fatigue, ensure transparent volunteer accountability, and accelerate community impact.</p>
+          </div>
+
+          <div class="value-props-grid">
+            <!-- 1. Smart Volunteer Matching -->
+            <div class="value-card">
+              <div class="value-card-icon-wrap primary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <div class="value-card-badge">92%+ Accuracy</div>
+              <h3 class="value-card-title">Smart Volunteer Matching</h3>
+              <p class="value-card-desc">
+                Multi-factor algorithmic scoring factoring in validated skills (BLS, Triage, Teaching), real-time distance radius, hourly availability, and reliability ratings.
+              </p>
+              <ul class="value-card-checklist">
+                <li><span>✓</span> Multi-dimensional skill &amp; certification matching</li>
+                <li><span>✓</span> Proximity-based GPS travel radius filtering</li>
+                <li><span>✓</span> Transparent score breakdown for every candidate</li>
+              </ul>
             </div>
-            <div>
-              <div class="brand-stat-num">96.4%</div>
-              <div class="brand-stat-lbl">Fulfillment Rate</div>
+
+            <!-- 2. Real-Time Deployment -->
+            <div class="value-card">
+              <div class="value-card-icon-wrap teal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+              <div class="value-card-badge">Geo-Fenced</div>
+              <h3 class="value-card-title">Real-Time Deployment</h3>
+              <p class="value-card-desc">
+                Live field telemetry, shift status milestones (<span style="font-size:0.78rem;font-weight:700;">MATCHED → DEPLOYED → COMPLETED</span>), on-site geo-fenced photo clock-in, and instant debriefs.
+              </p>
+              <ul class="value-card-checklist">
+                <li><span>✓</span> Geo-fenced live photo check-in with GPS lock</li>
+                <li><span>✓</span> Real-time supervisor attendance verification</li>
+                <li><span>✓</span> Dynamic task checklist with completion tracking</li>
+              </ul>
             </div>
-            <div>
-              <div class="brand-stat-num">14 Min</div>
-              <div class="brand-stat-lbl">Emergency Response</div>
+
+            <!-- 3. Emergency Response -->
+            <div class="value-card">
+              <div class="value-card-icon-wrap danger">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              </div>
+              <div class="value-card-badge">Sub-15 Min</div>
+              <h3 class="value-card-title">Emergency Response</h3>
+              <p class="value-card-desc">
+                Instant SOS broadcast dispatch alerting qualified first responders within proximity for flood relief, medical camps, and rapid disaster interventions.
+              </p>
+              <ul class="value-card-checklist">
+                <li><span>✓</span> 1-click critical broadcast to nearby volunteers</li>
+                <li><span>✓</span> Real-time responder acknowledgment counts</li>
+                <li><span>✓</span> Emergency supply &amp; triage staging coordination</li>
+              </ul>
+            </div>
+
+            <!-- 4. Impact & Analytics -->
+            <div class="value-card">
+              <div class="value-card-icon-wrap success">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+              </div>
+              <div class="value-card-badge">Verified Proof</div>
+              <h3 class="value-card-title">Impact &amp; Analytics</h3>
+              <p class="value-card-desc">
+                Cryptographically verifiable service certificates, automated volunteer hour logs, supervisor evaluation feedback, and UN SDG impact analytics.
+              </p>
+              <ul class="value-card-checklist">
+                <li><span>✓</span> Instant downloadable PDF service certificates</li>
+                <li><span>✓</span> Accurate volunteer retention &amp; reliability index</li>
+                <li><span>✓</span> NGO drive performance &amp; SDG impact reporting</li>
+              </ul>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Right Login / Signup Form -->
-        <div class="auth-form-panel">
-          <div style="margin-bottom: 18px;">
-            <span class="brand-badge" style="background: #e0e7ff; color: #3730a3; font-weight: 800; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px;">
-              RESTRICTED ACCESS PORTAL
-            </span>
-            <h2 class="auth-form-title" style="margin-top: 6px;">Sign In to Sahayak</h2>
-            <p class="auth-form-subtitle">Only registered volunteers and verified NGO coordinators can access this platform.</p>
+      <!-- "HOW SAHAYAK WORKS" 4-STEP VISUAL SECTION -->
+      <section id="how-it-works" class="landing-section how-it-works-section">
+        <div class="landing-container">
+          <div class="section-header-block">
+            <span class="section-kicker">STREAMLINED WORKFLOW</span>
+            <h2 class="section-title">How Sahayak Works</h2>
+            <p class="section-subtitle">A seamless 4-step framework transforming how community drives and disaster operations are coordinated.</p>
           </div>
 
-          <!-- PRIMARY REGISTRATION CALLOUT (MANDATORY REGISTRATION FIRST) -->
-          <div class="enrollment-links-box" style="margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(16,185,129,0.08)); border-radius: var(--radius-lg); border: 2px solid rgba(37,99,235,0.25);">
-            <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-900); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-              ✨ New to Sahayak? Register First
+          <div class="steps-four-grid">
+            <!-- Step 1 -->
+            <div class="step-box">
+              <div class="step-num-badge">01</div>
+              <div class="step-icon-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </div>
+              <h4 class="step-box-title">Create Requirement</h4>
+              <p class="step-box-desc">
+                NGOs define volunteer roles, required certifications (e.g. First Aid, Triage), slot timings, and exact venue coordinates.
+              </p>
             </div>
-            <p style="font-size: 0.82rem; color: var(--neutral-600); margin-bottom: 12px; line-height: 1.45;">
-              First-time users must complete registration to create an authorized account.
-            </p>
-            <div style="display: flex; gap: 8px;">
-              <button type="button" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.82rem; padding: 9px 8px; justify-content: center; font-weight: 800; background: #2563eb; border: none; box-shadow: 0 4px 10px rgba(37,99,235,0.25);" onclick="window.SahayakApp.openVolunteerEnrollmentModal();">
-                🤝 Volunteer Form
-              </button>
-              <button type="button" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.82rem; padding: 9px 8px; justify-content: center; font-weight: 800; background: #059669; border: none; box-shadow: 0 4px 10px rgba(5,150,105,0.25);" onclick="window.SahayakApp.openNgoEnrollmentModal();">
-                🏢 NGO Form
-              </button>
+
+            <!-- Step 2 -->
+            <div class="step-box">
+              <div class="step-num-badge">02</div>
+              <div class="step-icon-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+              </div>
+              <h4 class="step-box-title">Match Volunteers</h4>
+              <p class="step-box-desc">
+                Sahayak's AI engine ranks candidate volunteers based on skill compatibility, travel distance, and availability in real time.
+              </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-box">
+              <div class="step-num-badge">03</div>
+              <div class="step-icon-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </div>
+              <h4 class="step-box-title">Dispatch &amp; Schedule</h4>
+              <p class="step-box-desc">
+                Volunteers accept with 1 click, receive safety briefs, navigation routes, and automated task reminders.
+              </p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step-box">
+              <div class="step-num-badge">04</div>
+              <div class="step-icon-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <h4 class="step-box-title">Track Impact</h4>
+              <p class="step-box-desc">
+                Live geo-fenced clock-ins verify on-site attendance, completing tasks release authenticated service certificates.
+              </p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <!-- SIGN IN SECTION -->
-          <div style="border-top: 1px solid var(--neutral-200); padding-top: 16px; margin-bottom: 14px;">
-            <div style="font-size: 0.8rem; font-weight: 800; color: var(--neutral-700); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">
-              Already Registered? Sign In Below:
+      <!-- PLATFORM IMPACT METRICS STRIP -->
+      <section id="impact-metrics" class="impact-metrics-strip">
+        <div class="landing-container">
+          <div class="impact-metrics-grid">
+            <div class="metric-block">
+              <div class="metric-number">1,240+</div>
+              <div class="metric-label">Verified Volunteers</div>
+              <div class="metric-note">Active Community Network</div>
+            </div>
+            <div class="metric-block">
+              <div class="metric-number">54+</div>
+              <div class="metric-label">Partner NGOs &amp; Agencies</div>
+              <div class="metric-note">Healthcare, Relief, Education</div>
+            </div>
+            <div class="metric-block">
+              <div class="metric-number">96.4%</div>
+              <div class="metric-label">Fulfillment Rate</div>
+              <div class="metric-note">Target volunteer quota met</div>
+            </div>
+            <div class="metric-block">
+              <div class="metric-number">14 Min</div>
+              <div class="metric-label">Emergency SOS Response</div>
+              <div class="metric-note">Average on-ground mobilization</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOGIN / ROLE SELECTION & ONBOARDING SECTION -->
+      <section id="onboarding" class="landing-section onboarding-section">
+        <div class="landing-container">
+          <div class="section-header-block">
+            <span class="section-kicker">ACCESS SAHAYAK PORTAL</span>
+            <h2 class="section-title">Select Your Role to Access Portal</h2>
+            <p class="section-subtitle">Choose how you participate in community volunteer operations.</p>
+          </div>
+
+          <!-- ROLE CARDS SELECTION GRID -->
+          <div class="role-cards-grid">
+            
+            <!-- ROLE CARD 1: VOLUNTEER -->
+            <div class="role-selection-card volunteer-card">
+              <div class="role-card-badge">For Community Responders</div>
+              <div class="role-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <h3 class="role-card-title">Volunteer</h3>
+              <p class="role-card-text">
+                Discover local community drives and medical camps, get matched by AI to causes matching your skills, and earn verified service certificates.
+              </p>
+              <div class="role-card-actions">
+                <button type="button" class="btn btn-primary btn-block" onclick="window.SahayakApp.openVolunteerEnrollmentModal();">
+                  🤝 Register as Volunteer
+                </button>
+                <button type="button" class="btn btn-secondary btn-block" onclick="window.SahayakApp.selectRoleTab('volunteer');">
+                  🔑 Sign In to Volunteer Portal
+                </button>
+              </div>
             </div>
 
-            <!-- Role Selector -->
+            <!-- ROLE CARD 2: NGO / ORGANIZER -->
+            <div class="role-selection-card ngo-card">
+              <div class="role-card-badge" style="background:#ecfdf5;color:#059669;border-color:#a7f3d0;">For NGOs &amp; Coordinators</div>
+              <div class="role-card-icon" style="background:#ecfdf5;color:#059669;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>
+              </div>
+              <h3 class="role-card-title">NGO / Organizer</h3>
+              <p class="role-card-text">
+                Publish volunteer requirements, instantly match vetted local responders, track live deployment telemetry, and broadcast emergency SOS alerts.
+              </p>
+              <div class="role-card-actions">
+                <button type="button" class="btn btn-success btn-block" onclick="window.SahayakApp.openNgoEnrollmentModal();">
+                  🏢 Register as NGO Organization
+                </button>
+                <button type="button" class="btn btn-secondary btn-block" onclick="window.SahayakApp.selectRoleTab('ngo');">
+                  🔑 Sign In to NGO Portal
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SIGN IN & AUTH BOX -->
+          <div class="auth-box-container" id="auth-box-section">
+            <div class="auth-box-header">
+              <h3 class="auth-box-title">Sign In to Sahayak</h3>
+              <p class="auth-box-subtitle">Enter your registered credentials below to access your dashboard.</p>
+            </div>
+
+            <!-- Role Selector Tabs for Login -->
             <div class="role-tabs" id="auth-role-tabs">
               <button class="role-tab-btn active" data-role="volunteer">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                Volunteer
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Volunteer Portal
               </button>
               <button class="role-tab-btn" data-role="ngo">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>
-                NGO / Admin
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>
+                NGO / Coordinator
               </button>
             </div>
 
@@ -168,7 +471,7 @@
                   <span class="input-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                   </span>
-                  <input type="email" id="auth-email" class="form-input" placeholder="Enter your registered email" required>
+                  <input type="email" id="auth-email" class="form-input" placeholder="Enter your registered email" value="rahul.sharma@volunteer.in" required>
                 </div>
               </div>
 
@@ -178,7 +481,7 @@
                   <span class="input-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                   </span>
-                  <input type="password" id="auth-password" class="form-input" placeholder="Enter password (min 6 chars)" required>
+                  <input type="password" id="auth-password" class="form-input" placeholder="Enter password" value="password123" required>
                 </div>
               </div>
 
@@ -187,19 +490,100 @@
                   <input type="checkbox" id="auth-location-perm" checked>
                   <span>Allow GPS location for Smart Matching</span>
                 </label>
-                <a href="#" onclick="event.preventDefault(); window.SahayakApp.handleForgotPassword();" style="color: var(--primary-700); font-weight: 600;">Forgot?</a>
+                <a href="#" onclick="event.preventDefault(); window.SahayakApp.handleForgotPassword();" style="color: var(--primary-700); font-weight: 600; font-size: 0.82rem;">Forgot Password?</a>
               </div>
 
-              <div style="margin-bottom: 12px;">
-                <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" style="padding: 11px; font-weight: 800; font-size: 0.95rem;">
+              <div style="margin-top: 16px;">
+                <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" style="padding: 12px; font-weight: 700; font-size: 0.95rem;">
                   Sign In to Sahayak →
                 </button>
+              </div>
+
+              <div style="display: flex; gap: 8px; justify-content: center; margin-top: 14px; font-size: 0.78rem; color: var(--neutral-500);">
+                <span>Need an account?</span>
+                <a href="#" onclick="event.preventDefault(); window.SahayakApp.openVolunteerEnrollmentModal();" style="color: var(--primary-700); font-weight: 700;">Register as Volunteer</a>
+                <span>•</span>
+                <a href="#" onclick="event.preventDefault(); window.SahayakApp.openNgoEnrollmentModal();" style="color: var(--success-600); font-weight: 700;">Register as NGO</a>
               </div>
             </form>
           </div>
 
         </div>
-      </div>
+      </section>
+
+      <!-- FINAL CALL TO ACTION SECTION -->
+      <section class="final-cta-section">
+        <div class="landing-container">
+          <div class="final-cta-box">
+            <h2 class="final-cta-title">Ready to mobilize your community?</h2>
+            <p class="final-cta-desc">
+              Join thousands of changemakers and hundreds of top NGOs driving fast, coordinated impact where it matters most.
+            </p>
+            <div class="final-cta-actions">
+              <button type="button" class="btn btn-lg btn-primary" onclick="window.SahayakApp.openVolunteerEnrollmentModal();">
+                🤝 Register as Volunteer
+              </button>
+              <button type="button" class="btn btn-lg btn-secondary" onclick="window.SahayakApp.openNgoEnrollmentModal();">
+                🏢 Register NGO Organization
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CIVIC-TECH FOOTER -->
+      <footer class="landing-footer">
+        <div class="landing-container">
+          <div class="footer-top-row">
+            <div class="footer-brand">
+              <div class="brand-logo-lockup">
+                <div class="brand-icon-box">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <div>
+                  <span class="brand-name" style="font-size: 1.15rem;">Sahayak</span>
+                  <div style="font-size: 0.72rem; color: var(--neutral-500);">Community Volunteer Coordination Platform</div>
+                </div>
+              </div>
+              <p class="footer-tagline-text">
+                "Connecting People. Mobilizing Impact." — Open-source civic technology for social impact.
+              </p>
+            </div>
+
+            <div class="footer-links-group">
+              <div class="footer-links-col">
+                <h5>Platform</h5>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#value-props">Smart Matching</a>
+                <a href="#flow-section">Deployment Tracking</a>
+                <a href="#impact-metrics">Impact Analytics</a>
+              </div>
+              <div class="footer-links-col">
+                <h5>Portals</h5>
+                <a href="#onboarding" onclick="window.SahayakApp.selectRoleTab('volunteer');">Volunteer View</a>
+                <a href="#onboarding" onclick="window.SahayakApp.selectRoleTab('ngo');">NGO Coordinator</a>
+                <a href="#" onclick="event.preventDefault(); window.SahayakApp.openVolunteerEnrollmentModal();">Volunteer Registration</a>
+                <a href="#" onclick="event.preventDefault(); window.SahayakApp.openNgoEnrollmentModal();">NGO Registration</a>
+              </div>
+              <div class="footer-links-col">
+                <h5>Standards &amp; Trust</h5>
+                <span>Verified NGO Network</span>
+                <span>Open Data Standards</span>
+                <span>Geo-Fenced Verification</span>
+                <span>NDMA &amp; Red Cross Aligned</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-bottom-row">
+            <div>© 2026 Sahayak Platform. All rights reserved.</div>
+            <div style="display: flex; gap: 16px;">
+              <a href="#hero">Back to Top ↑</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
     </div>
 
 
@@ -210,23 +594,24 @@
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-brand-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
-              <polyline points="16 11 18 13 22 9"></polyline>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
           </div>
           <div>
             <div class="sidebar-brand-text">Sahayak</div>
-            <div style="font-size: 0.72rem; color: var(--neutral-400); font-weight: 600;">Volunteer Ops &amp; Match</div>
+            <div style="font-size: 0.72rem; color: var(--neutral-400); font-weight: 600;">Connecting People • Impact</div>
           </div>
         </div>
 
-        <!-- Role Badge Indicator -->
+        <!-- Role Badge Indicator & One-Click Switcher -->
         <div class="sidebar-role-indicator">
-          <span id="sidebar-role-pill" class="role-pill-badge volunteer" style="width: 100%; justify-content: center; padding: 6px 12px; font-size: 0.78rem;">
-            ● Volunteer View
-          </span>
+          <button id="sidebar-role-pill" class="role-pill-badge volunteer" style="width: 100%; justify-content: center; padding: 7px 12px; font-size: 0.78rem;" onclick="window.SahayakApp.toggleRole();" title="Click to Switch Role View">
+            ● Volunteer View (Click to Switch)
+          </button>
         </div>
 
         <!-- Nav Items -->
@@ -242,7 +627,7 @@
               <div class="user-snippet-name" id="sidebar-user-name">Rahul Sharma</div>
               <div class="user-snippet-role" id="sidebar-user-role">Certified First Responder</div>
             </div>
-            <button id="btn-logout" title="Sign Out" style="color: var(--neutral-400); padding: 4px;" onclick="window.SahayakApp.logout();">
+            <button id="btn-logout" title="Sign Out & Return to Landing Page" style="color: var(--neutral-400); padding: 6px;" onclick="window.SahayakApp.logout();">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
           </div>
@@ -255,7 +640,7 @@
         <div class="topbar">
           <div class="topbar-left">
             <div class="page-breadcrumb">
-              <span>Sahayak</span>
+              <a href="#" onclick="event.preventDefault(); window.SahayakApp.logout();" style="color: var(--neutral-500); cursor: pointer;">Sahayak</a>
               <span>/</span>
               <span id="breadcrumb-page-title" class="page-breadcrumb-current">Dashboard</span>
             </div>
@@ -273,6 +658,11 @@
               <span id="topbar-deploy-badge" class="badge badge-primary">Shift: Matched</span>
             </button>
 
+            <!-- Role Quick Switcher in Topbar -->
+            <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.toggleRole();" title="Toggle Volunteer / NGO View" style="padding: 5px 10px; font-size: 0.78rem;">
+              ⇄ Switch View
+            </button>
+
             <!-- Notifications Button -->
             <button class="topbar-action-btn" title="Alerts" onclick="window.SahayakApp.showToast('1 New High-Priority Alert: Flood Relief Support in Kurla Sector.', 'danger');">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -283,19 +673,7 @@
 
         <!-- DYNAMIC PAGE CONTENT CONTAINER -->
         <div id="content-container" class="page-container">
-          <!-- Page views injected dynamically:
-               - view-volunteer-dashboard
-               - view-volunteer-profile
-               - view-opportunities
-               - view-smart-match
-               - view-event-details
-               - view-deployment-tracking
-               - view-ngo-dashboard
-               - view-volunteer-management
-               - view-emergency-center
-               - view-analytics
-               - view-settings
-          -->
+          <!-- Page views injected dynamically -->
         </div>
       </main>
 
@@ -310,6 +688,8 @@
          - Emergency Broadcast
          - Check-out Summary Certificate
          - Assign Volunteer
+         - Volunteer Enrollment Modal
+         - NGO Enrollment Modal
     -->
   </div>
 

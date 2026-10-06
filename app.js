@@ -36,7 +36,7 @@
 
   // Demo Walkthrough Definition
   const DEMO_STEPS = [
-    { id: 'auth', label: '1. Login', page: 'auth' },
+    { id: 'auth', label: '1. Landing & Portal', page: 'auth' },
     { id: 'profile', label: '2. Profile', page: 'profile' },
     { id: 'dashboard', label: '3. Dashboard', page: 'dashboard' },
     { id: 'smart-match', label: '4. Smart Match (92%)', page: 'smart-match' },
@@ -364,11 +364,40 @@
     }
   }
 
+  function selectRoleTab(role) {
+    state.currentRole = role;
+    const authRoleTabs = document.querySelectorAll('#auth-role-tabs .role-tab-btn');
+    authRoleTabs.forEach(tab => {
+      if (tab.getAttribute('data-role') === role) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+    const emailInput = document.getElementById('auth-email');
+    if (emailInput) {
+      emailInput.placeholder = role === 'ngo' ? 'Enter registered NGO email' : 'Enter registered volunteer email';
+      emailInput.value = role === 'ngo' ? 'coordination@helpinghands.ngo' : 'rahul.sharma@volunteer.in';
+    }
+    const passInput = document.getElementById('auth-password');
+    if (passInput) {
+      passInput.value = 'password123';
+    }
+    const errBanner = document.getElementById('auth-error-banner');
+    if (errBanner) errBanner.style.display = 'none';
+
+    const authBox = document.getElementById('auth-box-section') || document.getElementById('onboarding');
+    if (authBox) {
+      authBox.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
   function handleLogin() {
     state.isLoggedIn = true;
-    document.getElementById('view-auth').style.display = 'none';
-    document.getElementById('main-app-shell').style.display = 'flex';
-    document.getElementById('demo-tour-bar').style.display = 'flex';
+    const authView = document.getElementById('view-auth');
+    const shell = document.getElementById('main-app-shell');
+    if (authView) authView.style.display = 'none';
+    if (shell) shell.style.display = 'flex';
 
     showToast(`Welcome back, ${state.currentRole === 'volunteer' ? state.currentUser.name : state.ngoUser.name}! GPS location synchronized.`, 'success');
     
@@ -398,9 +427,10 @@
         console.warn('Sign out error:', e);
       }
     }
-    document.getElementById('view-auth').style.display = 'flex';
-    document.getElementById('main-app-shell').style.display = 'none';
-    document.getElementById('demo-tour-bar').style.display = 'none';
+    const authView = document.getElementById('view-auth');
+    const shell = document.getElementById('main-app-shell');
+    if (authView) authView.style.display = 'flex';
+    if (shell) shell.style.display = 'none';
     showToast('Signed out of Sahayak session.', 'neutral');
   }
 
@@ -465,7 +495,6 @@
   function renderApp() {
     renderSidebar();
     renderTopbar();
-    renderDemoTourBar();
     renderPageContent();
   }
 
@@ -5325,6 +5354,7 @@
     handleAuthSubmit,
     handleForgotPassword,
     setAuthMode,
+    selectRoleTab,
     openVolunteerEnrollmentModal,
     submitVolunteerEnrollment,
     openNgoEnrollmentModal,
@@ -5380,8 +5410,7 @@
     saveSupabaseSettings,
     disconnectSupabase,
     seedSupabaseData,
-    hydrateFromSupabase,
-    handleDemoStepClick
+    hydrateFromSupabase
   };
 
   // Bind role tabs on Auth screen & restore active session
@@ -5410,10 +5439,8 @@
 
           const authView = document.getElementById('view-auth');
           const shellView = document.getElementById('main-app-shell');
-          const tourBar = document.getElementById('demo-tour-bar');
           if (authView) authView.style.display = 'none';
           if (shellView) shellView.style.display = 'flex';
-          if (tourBar) tourBar.style.display = 'flex';
 
           state.activePage = state.currentRole === 'ngo' ? 'ngo-dashboard' : 'dashboard';
           renderApp();
@@ -5447,13 +5474,6 @@
     const btnToggleRole = document.getElementById('btn-toggle-role');
     if (btnToggleRole) {
       btnToggleRole.addEventListener('click', toggleRole);
-    }
-
-    const btnRestartDemo = document.getElementById('btn-restart-demo');
-    if (btnRestartDemo) {
-      btnRestartDemo.addEventListener('click', () => {
-        handleDemoStepClick(0);
-      });
     }
   }
 
