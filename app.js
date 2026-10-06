@@ -184,27 +184,93 @@
   function applyUserData(displayName, email, role, extra = {}) {
     const rawName = displayName || (email ? email.split('@')[0] : 'Volunteer');
     const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-    
+    const userEmail = (email || '').toLowerCase().trim();
+
+    const isDemoVolunteer = (userEmail === 'rahul.sharma@volunteer.in');
+    const isDemoNgo = (userEmail === 'coordination@helpinghands.ngo');
+
     if (role === 'ngo') {
       state.currentRole = 'ngo';
-      state.ngoUser.name = formattedName.includes(' ') || formattedName.toLowerCase().includes('ngo') || formattedName.toLowerCase().includes('foundation') ? formattedName : `${formattedName} Relief Org`;
-      state.ngoUser.email = email || 'coordination@helpinghands.ngo';
-      state.ngoUser.avatar = formattedName.slice(0, 2).toUpperCase();
-      if (extra.location) state.ngoUser.location = extra.location;
-      if (extra.mobile) state.ngoUser.mobile = extra.mobile;
-      if (extra.regNumber) state.ngoUser.regNumber = extra.regNumber;
+      if (isDemoNgo) {
+        state.ngoUser = JSON.parse(JSON.stringify(INITIAL_DATA.ngoUser));
+        state.ngoEvents = JSON.parse(JSON.stringify(INITIAL_DATA.ngoEvents || []));
+        state.ngoVolunteers = JSON.parse(JSON.stringify(INITIAL_DATA.ngoVolunteers || []));
+      } else {
+        // Brand new NGO: Initialize with clean zero-data state!
+        const initials = formattedName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'NG';
+        state.ngoUser = {
+          id: extra.id || `ngo-${Date.now()}`,
+          name: formattedName.includes(' ') || formattedName.toLowerCase().includes('ngo') || formattedName.toLowerCase().includes('foundation') || formattedName.toLowerCase().includes('trust') ? formattedName : `${formattedName} Relief Org`,
+          email: email || 'contact@ngo.org',
+          mobile: extra.mobile || '',
+          avatar: initials,
+          role: 'ngo',
+          regNumber: extra.regNumber || extra.darpanId || `MH/${new Date().getFullYear()}/NGO-${Math.floor(1000 + Math.random() * 9000)}`,
+          location: extra.location || 'Mumbai, Maharashtra',
+          sector: extra.sector || 'Community Relief',
+          website: extra.website || '',
+          rating: 5.0,
+          eventsOrganized: 0,
+          volunteersDeployed: 0
+        };
+        state.ngoEvents = [];
+        state.ngoVolunteers = [];
+      }
     } else {
       state.currentRole = role || 'volunteer';
-      state.currentUser.name = formattedName;
-      state.currentUser.email = email || 'volunteer@sahayak.in';
-      state.currentUser.avatar = formattedName.slice(0, 2).toUpperCase();
-      if (extra.location) state.currentUser.location = extra.location;
-      if (extra.skills && extra.skills.length) state.currentUser.skills = extra.skills;
-      if (extra.mobile) state.currentUser.mobile = extra.mobile;
-      if (extra.bio) state.currentUser.bio = extra.bio;
-      if (extra.availability) state.currentUser.availability = extra.availability;
-      if (state.activeDeployment) {
-        state.activeDeployment.volunteerName = formattedName;
+      if (isDemoVolunteer) {
+        state.currentUser = JSON.parse(JSON.stringify(INITIAL_DATA.currentUser));
+        state.scheduledTasks = JSON.parse(JSON.stringify(INITIAL_DATA.scheduledTasks || []));
+        state.activeDeployment = JSON.parse(JSON.stringify(INITIAL_DATA.activeDeployment));
+      } else {
+        // Brand new Volunteer: Initialize with clean zero-data state!
+        const initials = formattedName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'VO';
+        state.currentUser = {
+          id: extra.id || `vol-${Date.now()}`,
+          name: formattedName,
+          email: email || 'volunteer@sahayak.in',
+          mobile: extra.mobile || '',
+          avatar: initials,
+          role: 'volunteer',
+          location: extra.location || 'Mumbai, Maharashtra',
+          coordinates: extra.coordinates || { lat: 19.0760, lng: 72.8777 },
+          bio: extra.bio || '',
+          skills: extra.skills || [],
+          certifications: [],
+          availability: extra.availability || 'Weekends & Evenings',
+          experience: extra.experience || 'New Member',
+          languages: extra.languages || ['English', 'Hindi'],
+          reliabilityScore: 100,
+          completedEvents: 0,
+          totalVolunteerHours: 0,
+          supervisorRating: 5.0,
+          onTimeRate: '100%',
+          maxTravelRadiusKm: 15,
+          attendedEvents: []
+        };
+        state.scheduledTasks = [];
+        state.activeDeployment = {
+          eventId: null,
+          eventTitle: null,
+          organization: null,
+          status: 'IDLE',
+          assignedLocation: null,
+          shiftTime: null,
+          shiftHours: 0,
+          date: null,
+          checkInTime: null,
+          checkOutTime: null,
+          checkInPhoto: null,
+          checkInTimestamp: null,
+          checkOutPhoto: null,
+          checkOutSummary: '',
+          shiftRating: 5,
+          tasks: [],
+          emergencyContact: null,
+          teamMembers: [],
+          qrCodeToken: null,
+          notes: ''
+        };
       }
     }
   }
@@ -376,12 +442,13 @@
     });
     const emailInput = document.getElementById('auth-email');
     if (emailInput) {
-      emailInput.placeholder = role === 'ngo' ? 'Enter registered NGO email' : 'Enter registered volunteer email';
-      emailInput.value = role === 'ngo' ? 'coordination@helpinghands.ngo' : 'rahul.sharma@volunteer.in';
+      emailInput.placeholder = role === 'ngo' ? 'Enter registered NGO email (e.g. name@ngo.org)' : 'Enter registered volunteer email (e.g. name@volunteer.in)';
+      emailInput.value = '';
     }
     const passInput = document.getElementById('auth-password');
     if (passInput) {
-      passInput.value = 'password123';
+      passInput.placeholder = 'Enter password (min 6 characters)';
+      passInput.value = '';
     }
     const errBanner = document.getElementById('auth-error-banner');
     if (errBanner) errBanner.style.display = 'none';
@@ -1008,39 +1075,47 @@
               </span>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
-              ${(user.attendedEvents || []).slice(0, 3).map(att => `
-                <div style="padding: 12px; background: #ffffff; border-radius: var(--radius-md); border: 1px solid #a7f3d0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                    <span class="badge badge-success" style="font-size: 0.68rem; font-weight: 800;">
-                      ✓ ATTENDED &amp; VERIFIED
-                    </span>
-                    <span style="font-size: 0.72rem; color: var(--neutral-500); font-weight: 700;">${att.date}</span>
-                  </div>
+            ${(user.attendedEvents && user.attendedEvents.length > 0) ? `
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+                ${(user.attendedEvents || []).slice(0, 3).map(att => `
+                  <div style="padding: 12px; background: #ffffff; border-radius: var(--radius-md); border: 1px solid #a7f3d0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                      <span class="badge badge-success" style="font-size: 0.68rem; font-weight: 800;">
+                        ✓ ATTENDED &amp; VERIFIED
+                      </span>
+                      <span style="font-size: 0.72rem; color: var(--neutral-500); font-weight: 700;">${att.date}</span>
+                    </div>
 
-                  <h4 style="font-weight: 800; font-size: 0.92rem; color: var(--primary-900); margin: 4px 0 2px 0;">
-                    ${att.title}
-                  </h4>
+                    <h4 style="font-weight: 800; font-size: 0.92rem; color: var(--primary-900); margin: 4px 0 2px 0;">
+                      ${att.title}
+                    </h4>
 
-                  <div style="font-size: 0.76rem; color: var(--neutral-600); margin-bottom: 2px;">
-                    🏢 ${att.organization} • <strong>${att.hours}.0 Hours Credited</strong>
-                  </div>
+                    <div style="font-size: 0.76rem; color: var(--neutral-600); margin-bottom: 2px;">
+                      🏢 ${att.organization} • <strong>${att.hours}.0 Hours Credited</strong>
+                    </div>
 
-                  <div style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #059669; font-weight: 600; margin-bottom: 8px;">
-                    <span>👨‍⚕️ Supervisor: ${att.supervisor}</span>
-                  </div>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #059669; font-weight: 600; margin-bottom: 8px;">
+                      <span>👨‍⚕️ Supervisor: ${att.supervisor}</span>
+                    </div>
 
-                  <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px;" onclick="window.SahayakApp.openAttendanceSlipModal();">
-                      📄 Attendance Slip
-                    </button>
-                    <button class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate();">
-                      🏅 Certificate
-                    </button>
+                    <div style="display: flex; gap: 6px;">
+                      <button class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px;" onclick="window.SahayakApp.openAttendanceSlipModal();">
+                        📄 Attendance Slip
+                      </button>
+                      <button class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate();">
+                        🏅 Certificate
+                      </button>
+                    </div>
                   </div>
-                </div>
-              `).join('')}
-            </div>
+                `).join('')}
+              </div>
+            ` : `
+              <div style="text-align: center; padding: 20px 14px; background: #ffffff; border-radius: var(--radius-md); border: 1px dashed #6ee7b7; margin-bottom: 12px;">
+                <div style="font-size: 1.6rem; margin-bottom: 4px;">🏅</div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: #065f46; margin-bottom: 2px;">No Attended Drives Yet</div>
+                <p style="font-size: 0.76rem; color: #047857; margin-bottom: 0;">Complete on-ground shifts to earn verified attendance records, supervisor endorsements, and service certificates.</p>
+              </div>
+            `}
 
             <button class="btn btn-secondary btn-block" style="font-size: 0.8rem;" onclick="window.SahayakApp.navigateTo('profile');">
               View Complete Attendance Record &amp; Badges →
@@ -1196,23 +1271,27 @@
           <div class="card">
             <div class="card-header">
               <h3 class="card-title">Verified Skills &amp; Proficiencies</h3>
-              <span class="badge badge-primary">${user.skills.length} Registered</span>
+              <span class="badge badge-primary">${(user.skills || []).length} Registered</span>
             </div>
             <div class="skill-pill-list">
-              ${user.skills.map(s => `
+              ${(user.skills && user.skills.length > 0) ? user.skills.map(s => `
                 <div class="skill-row-item">
                   <div class="skill-row-left">
                     <div style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--primary-700);"></div>
-                    <span style="font-weight: 700; color: var(--neutral-800);">${s.name}</span>
+                    <span style="font-weight: 700; color: var(--neutral-800);">${typeof s === 'string' ? s : s.name}</span>
                   </div>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="badge ${s.verified ? 'badge-success' : 'badge-neutral'}">
                       ${s.verified ? '✓ Verified' : 'Self-declared'}
                     </span>
-                    <span class="badge badge-primary">${s.level}</span>
+                    <span class="badge badge-primary">${s.level || 'Intermediate'}</span>
                   </div>
                 </div>
-              `).join('')}
+              `).join('') : `
+                <div style="text-align: center; padding: 18px; color: var(--neutral-500); font-size: 0.85rem;">
+                  No skills added yet. Click <strong>Edit Profile</strong> above to configure your emergency and community capabilities.
+                </div>
+              `}
             </div>
           </div>
 
@@ -1220,10 +1299,10 @@
           <div class="card">
             <div class="card-header">
               <h3 class="card-title">Official Certifications</h3>
-              <span class="badge badge-success">3 Active</span>
+              <span class="badge badge-success">${(user.certifications || []).length} Active</span>
             </div>
             <div>
-              ${user.certifications.map(c => `
+              ${(user.certifications && user.certifications.length > 0) ? user.certifications.map(c => `
                 <div class="cert-card-item">
                   <div class="cert-badge-box">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
@@ -1236,7 +1315,11 @@
                   </div>
                   <span class="badge badge-neutral" style="font-family: monospace; font-size: 0.7rem;">${c.badge}</span>
                 </div>
-              `).join('')}
+              `).join('') : `
+                <div style="text-align: center; padding: 20px; color: var(--neutral-500); font-size: 0.85rem; background: var(--neutral-50); border-radius: var(--radius-md); border: 1px dashed var(--neutral-300);">
+                  No certifications uploaded yet. Earn verified credentials by completing on-ground drives or uploading Red Cross / NDMA badges.
+                </div>
+              `}
             </div>
           </div>
         </div>
@@ -1379,61 +1462,74 @@
           </span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
-          ${(user.attendedEvents || []).map(att => `
-            <div style="padding: 16px; background: #ffffff; border: 1.5px solid #a7f3d0; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                <span class="badge badge-success" style="font-size: 0.7rem; font-weight: 800;">
-                  ✓ ATTENDED &amp; ON-SITE VERIFIED
-                </span>
-                <span style="font-size: 0.74rem; color: var(--neutral-500); font-weight: 700;">${att.date}</span>
-              </div>
-
-              <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                <div style="position: relative; width: 64px; height: 64px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid #10b981; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openPhotoProofViewer();" title="Click to view full on-site proof photo">
-                  <img src="${att.photoProof}" alt="${att.title} Proof" style="width: 100%; height: 100%; object-fit: cover;" />
-                  <span style="position: absolute; bottom: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #6ee7b7; font-size: 0.55rem; padding: 1px 3px; font-family: monospace;">GPS</span>
+        ${(user.attendedEvents && user.attendedEvents.length > 0) ? `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            ${user.attendedEvents.map(att => `
+              <div style="padding: 16px; background: #ffffff; border: 1.5px solid #a7f3d0; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                  <span class="badge badge-success" style="font-size: 0.7rem; font-weight: 800;">
+                    ✓ ATTENDED &amp; ON-SITE VERIFIED
+                  </span>
+                  <span style="font-size: 0.74rem; color: var(--neutral-500); font-weight: 700;">${att.date}</span>
                 </div>
 
-                <div style="flex: 1;">
-                  <h4 style="font-weight: 800; font-size: 0.98rem; color: var(--primary-900); margin: 0 0 4px 0;">
-                    ${att.title}
-                  </h4>
-                  <div style="font-size: 0.78rem; color: var(--neutral-600); margin-bottom: 2px;">
-                    🏢 <strong>${att.organization}</strong>
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                  <div style="position: relative; width: 64px; height: 64px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid #10b981; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openPhotoProofViewer();" title="Click to view full on-site proof photo">
+                    <img src="${att.photoProof}" alt="${att.title} Proof" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <span style="position: absolute; bottom: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #6ee7b7; font-size: 0.55rem; padding: 1px 3px; font-family: monospace;">GPS</span>
                   </div>
-                  <div style="font-size: 0.75rem; color: var(--neutral-500);">
-                    📍 ${att.location}
+
+                  <div style="flex: 1;">
+                    <h4 style="font-weight: 800; font-size: 0.98rem; color: var(--primary-900); margin: 0 0 4px 0;">
+                      ${att.title}
+                    </h4>
+                    <div style="font-size: 0.78rem; color: var(--neutral-600); margin-bottom: 2px;">
+                      🏢 <strong>${att.organization}</strong>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--neutral-500);">
+                      📍 ${att.location}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div style="padding: 8px 10px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-size: 0.74rem; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                  <span style="color: var(--neutral-500);">Supervisor Sign-Off:</span>
-                  <strong style="color: #065f46;">${att.supervisor}</strong>
+                <div style="padding: 8px 10px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-size: 0.74rem; margin-bottom: 12px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: var(--neutral-500);">Supervisor Sign-Off:</span>
+                    <strong style="color: #065f46;">${att.supervisor}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: var(--neutral-500);">Geotag Perimeter:</span>
+                    <strong style="font-family: monospace; font-size: 0.7rem;">${att.gpsLocation || '19.1197° N, 72.8464° E'}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--neutral-500);">Credited Service:</span>
+                    <strong style="color: var(--primary-800);">${att.hours}.0 Verified Hours</strong>
+                  </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                  <span style="color: var(--neutral-500);">Geotag Perimeter:</span>
-                  <strong style="font-family: monospace; font-size: 0.7rem;">${att.gpsLocation || '19.1197° N, 72.8464° E'}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: var(--neutral-500);">Credited Service:</span>
-                  <strong style="color: var(--primary-800);">${att.hours}.0 Verified Hours</strong>
-                </div>
-              </div>
 
-              <div style="display: flex; gap: 8px; margin-top: auto;">
-                <button class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.74rem;" onclick="window.SahayakApp.openAttendanceSlipModal();">
-                  📄 Attendance Slip
-                </button>
-                <button class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.74rem; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate();">
-                  🏅 View Certificate
-                </button>
+                <div style="display: flex; gap: 8px; margin-top: auto;">
+                  <button class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.74rem;" onclick="window.SahayakApp.openAttendanceSlipModal();">
+                    📄 Attendance Slip
+                  </button>
+                  <button class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.74rem; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate();">
+                    🏅 View Certificate
+                  </button>
+                </div>
               </div>
-            </div>
-          `).join('')}
-        </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div style="padding: 28px 20px; text-align: center; color: var(--neutral-600); background: #ffffff; border-radius: var(--radius-md); border: 1px dashed #6ee7b7;">
+            <div style="font-size: 2rem; margin-bottom: 6px;">🛡️</div>
+            <div style="font-weight: 800; font-size: 1rem; color: #065f46; margin-bottom: 4px;">No Attended Events Recorded Yet</div>
+            <p style="font-size: 0.84rem; color: var(--neutral-500); max-width: 500px; margin: 0 auto 14px auto;">
+              When you attend field drives, complete your on-ground shifts, and submit photo proof, your permanent verified service logs and official certificates will appear here.
+            </p>
+            <button class="btn btn-sm btn-primary" style="background: #059669; border-color: #059669;" onclick="window.SahayakApp.navigateTo('smart-match');">
+              ⚡ Explore Matching Drives
+            </button>
+          </div>
+        `}
       </div>
     `;
   }
@@ -2192,6 +2288,46 @@
 
   function renderDeploymentTrackingPage() {
     const dep = state.activeDeployment;
+
+    if (!dep || dep.status === 'IDLE' || !dep.eventId) {
+      return `
+        <div class="deployment-container">
+          <section class="welcome-hero" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%); color: var(--white); margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.35);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span class="badge" style="background: rgba(255,255,255,0.2); color: var(--white); font-weight: 800; font-size: 0.76rem;">
+                  ⏱️ ON-GROUND OPERATIONS CONSOLE
+                </span>
+                <span style="color: #93c5fd; font-size: 0.82rem; font-weight: 600;">Status: Ready for Deployment</span>
+              </div>
+              <h1 class="welcome-title" style="color: var(--white); font-size: 1.75rem;">No Active Deployment</h1>
+              <p class="welcome-subtitle" style="color: #dbeafe; font-size: 0.92rem;">You are currently not deployed to an active shift. Discover upcoming volunteer drives and accept an opportunity to activate live GPS check-in.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" style="background: #ffffff; color: #1e3a8a; font-weight: 800;" onclick="window.SahayakApp.navigateTo('smart-match');">
+                ⚡ Find Matching Drives →
+              </button>
+            </div>
+          </section>
+
+          <div class="card" style="text-align: center; padding: 48px 24px;">
+            <div style="font-size: 3.2rem; margin-bottom: 12px;">🗺️</div>
+            <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-900); margin-bottom: 8px;">Frontline Telemetry Ready</h3>
+            <p style="color: var(--neutral-600); max-width: 540px; margin: 0 auto 24px auto; font-size: 0.92rem; line-height: 1.6;">
+              Once you accept an NGO volunteer opportunity from <strong>Smart Match</strong> or <strong>Opportunities</strong>, this console will automatically arm with live geofence validation, on-site photo proof upload, shift stopwatches, and digital attendance badges.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-primary btn-lg" onclick="window.SahayakApp.navigateTo('smart-match');">
+                ⚡ Open AI Smart Match
+              </button>
+              <button class="btn btn-secondary btn-lg" onclick="window.SahayakApp.navigateTo('opportunities');">
+                📋 Browse All Opportunities
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     // Start live timer if currently deployed
     if (dep.status === 'DEPLOYED') {
@@ -3735,27 +3871,27 @@
       <!-- 6 NGO KPI METRICS -->
       <div class="ngo-stats-grid">
         <div class="ngo-stat-box">
-          <span class="ngo-stat-num">6</span>
-          <span class="ngo-stat-title">Active Events</span>
+          <span class="ngo-stat-num">${(state.ngoEvents || []).length}</span>
+          <span class="ngo-stat-title">Active Drives</span>
         </div>
         <div class="ngo-stat-box">
-          <span class="ngo-stat-num">85</span>
+          <span class="ngo-stat-num">${(state.ngoEvents || []).reduce((acc, ev) => acc + (ev.requiredCount || 20), 0)}</span>
           <span class="ngo-stat-title">Required Volunteers</span>
         </div>
         <div class="ngo-stat-box">
-          <span class="ngo-stat-num" style="color: var(--primary-700);">64</span>
+          <span class="ngo-stat-num" style="color: var(--primary-700);">${(state.ngoEvents || []).reduce((acc, ev) => acc + (ev.matchedCount || 0), 0)}</span>
           <span class="ngo-stat-title">Matched Volunteers</span>
         </div>
         <div class="ngo-stat-box">
-          <span class="ngo-stat-num" style="color: var(--success-600);">28</span>
+          <span class="ngo-stat-num" style="color: var(--success-600);">${(state.ngoEvents || []).reduce((acc, ev) => acc + (ev.deployedCount || 0), 0)}</span>
           <span class="ngo-stat-title">Active Deployments</span>
         </div>
         <div class="ngo-stat-box">
-          <span class="ngo-stat-num" style="color: var(--warning-600);">12</span>
+          <span class="ngo-stat-num" style="color: var(--warning-600);">${(state.ngoEvents || []).reduce((acc, ev) => acc + (ev.pendingCount || 0), 0)}</span>
           <span class="ngo-stat-title">Pending Volunteers</span>
         </div>
         <div class="ngo-stat-box" style="border-color: var(--danger-200); background-color: var(--danger-50);">
-          <span class="ngo-stat-num" style="color: var(--danger-600);">1</span>
+          <span class="ngo-stat-num" style="color: var(--danger-600);">${(state.emergencyAlerts || []).length}</span>
           <span class="ngo-stat-title" style="color: var(--danger-600);">Emergency Alerts</span>
         </div>
       </div>
@@ -3786,25 +3922,25 @@
               </tr>
             </thead>
             <tbody>
-              ${state.ngoEvents.map(ev => `
+              ${(state.ngoEvents && state.ngoEvents.length > 0) ? state.ngoEvents.map(ev => `
                 <tr>
                   <td>
                     <div style="font-weight: 700; color: var(--primary-900); font-size: 0.95rem;">${ev.title}</div>
                     <div style="font-size: 0.75rem; color: var(--neutral-500);">${ev.date}</div>
                   </td>
                   <td>
-                    <span style="font-weight: 800; color: var(--primary-800);">${ev.matchedRatio}</span>
+                    <span style="font-weight: 800; color: var(--primary-800);">${ev.matchedRatio || `${ev.matchedCount || 0}/${ev.requiredCount || 0}`}</span>
                   </td>
                   <td>
-                    <span class="badge badge-success">${ev.deployedCount} Deployed</span>
+                    <span class="badge badge-success">${ev.deployedCount || 0} Deployed</span>
                   </td>
                   <td>
-                    <span class="badge badge-warning">${ev.pendingCount} Pending</span>
+                    <span class="badge badge-warning">${ev.pendingCount || 0} Pending</span>
                   </td>
                   <td>📍 ${ev.location}</td>
                   <td>
-                    <span class="badge ${ev.status.includes('Emergency') ? 'badge-danger' : 'badge-primary'}">
-                      ${ev.status}
+                    <span class="badge ${ev.status?.includes('Emergency') ? 'badge-danger' : 'badge-primary'}">
+                      ${ev.status || 'Active'}
                     </span>
                   </td>
                   <td>
@@ -3818,7 +3954,18 @@
                     </div>
                   </td>
                 </tr>
-              `).join('')}
+              `).join('') : `
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 32px 16px; color: var(--neutral-500);">
+                    <div style="font-size: 1.8rem; margin-bottom: 6px;">🏢</div>
+                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--primary-900); margin-bottom: 4px;">No Active Drives Posted Yet</div>
+                    <p style="font-size: 0.82rem; color: var(--neutral-500); margin-bottom: 12px;">Create your first volunteer requirement or emergency dispatch drive to mobilize verified volunteers.</p>
+                    <button class="btn btn-sm btn-primary" onclick="window.SahayakApp.showToast('Opening Event Creation Portal...', 'primary');">
+                      + Create Volunteer Requirement
+                    </button>
+                  </td>
+                </tr>
+              `}
             </tbody>
           </table>
         </div>
@@ -4214,37 +4361,37 @@
               </tr>
             </thead>
             <tbody>
-              ${volunteers.map(v => `
+              ${volunteers.length > 0 ? volunteers.map(v => `
                 <tr>
                   <td>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                      <div class="user-avatar-circle" style="width: 34px; height: 34px; font-size: 0.8rem;">
-                        ${v.avatar}
+                      <div class="user-avatar-circle" style="width: 34px; height: 34px; font-size: 0.8rem; background: #1e3a8a;">
+                        ${v.avatar || (v.name ? v.name.slice(0, 2).toUpperCase() : 'VO')}
                       </div>
                       <div>
                         <div style="font-weight: 700; color: var(--neutral-900);">${v.name}</div>
-                        <div style="font-size: 0.74rem; color: var(--neutral-500);">${v.hoursContributed} hrs served</div>
+                        <div style="font-size: 0.74rem; color: var(--neutral-500);">${v.hoursContributed || 0} hrs served</div>
                       </div>
                     </div>
                   </td>
                   <td>
                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                      ${v.skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}
+                      ${(v.skills || []).map(s => `<span class="skill-tag">${typeof s === 'string' ? s : s.name}</span>`).join('')}
                     </div>
                   </td>
-                  <td style="font-size: 0.82rem;">📍 ${v.location}</td>
-                  <td style="font-size: 0.82rem;">${v.availability}</td>
+                  <td style="font-size: 0.82rem;">📍 ${v.location || 'Mumbai'}</td>
+                  <td style="font-size: 0.82rem;">${v.availability || 'Weekends & Evenings'}</td>
                   <td>
-                    <span class="badge badge-ai" style="font-weight: 800;">${v.matchScore}%</span>
+                    <span class="badge badge-ai" style="font-weight: 800;">${v.matchScore || 90}%</span>
                   </td>
                   <td>
-                    <span class="badge badge-success">${v.reliabilityScore}%</span>
+                    <span class="badge badge-success">${v.reliabilityScore || v.reliability || 100}%</span>
                   </td>
                   <td>
                     <span class="badge ${v.status === 'Deployed' ? 'badge-success' :
                                          v.status === 'Matched' ? 'badge-primary' :
                                          v.status === 'Available' ? 'badge-neutral' : 'badge-warning'}">
-                      ${v.status}
+                      ${v.status || 'Available'}
                     </span>
                   </td>
                   <td>
@@ -4258,7 +4405,17 @@
                     </div>
                   </td>
                 </tr>
-              `).join('')}
+              `).join('') : `
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--neutral-500);">
+                    <div style="font-size: 2rem; margin-bottom: 6px;">👥</div>
+                    <div style="font-weight: 800; font-size: 1rem; color: var(--primary-900); margin-bottom: 4px;">No Volunteers in Operations Roster</div>
+                    <p style="font-size: 0.84rem; color: var(--neutral-500); max-width: 480px; margin: 0 auto;">
+                      Volunteers will populate automatically as they enroll and match with your NGO relief requirements.
+                    </p>
+                  </td>
+                </tr>
+              `}
             </tbody>
           </table>
         </div>
@@ -5035,18 +5192,18 @@
                   📍 Auto-Detect GPS
                 </button>
               </div>
-              <input type="text" id="enroll-vol-location" class="form-input" placeholder="e.g. Bandra West, Mumbai" value="Andheri West, Mumbai" required />
+              <input type="text" id="enroll-vol-location" class="form-input" placeholder="e.g. Bandra West, Mumbai" required />
             </div>
 
             <div class="form-group">
               <label class="form-label">Core Skills &amp; Capabilities</label>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: var(--neutral-50); border-radius: var(--radius-md); border: 1px solid var(--neutral-200);">
                 <label class="checkbox-label" style="font-size: 0.8rem;">
-                  <input type="checkbox" name="vol-skills" value="First Aid & CPR" checked />
+                  <input type="checkbox" name="vol-skills" value="First Aid & CPR" />
                   <span>First Aid &amp; CPR</span>
                 </label>
                 <label class="checkbox-label" style="font-size: 0.8rem;">
-                  <input type="checkbox" name="vol-skills" value="Crowd Management" checked />
+                  <input type="checkbox" name="vol-skills" value="Crowd Management" />
                   <span>Crowd Management</span>
                 </label>
                 <label class="checkbox-label" style="font-size: 0.8rem;">
@@ -5058,7 +5215,7 @@
                   <span>Disaster Search &amp; Rescue</span>
                 </label>
                 <label class="checkbox-label" style="font-size: 0.8rem;">
-                  <input type="checkbox" name="vol-skills" value="Food & Relief Distribution" checked />
+                  <input type="checkbox" name="vol-skills" value="Food & Relief Distribution" />
                   <span>Relief Distribution</span>
                 </label>
                 <label class="checkbox-label" style="font-size: 0.8rem;">
@@ -5080,7 +5237,7 @@
 
             <div class="form-group">
               <label class="form-label" for="enroll-vol-bio">Volunteer Bio / Motivation</label>
-              <textarea id="enroll-vol-bio" class="form-input" rows="2" placeholder="Brief details on past community service, languages spoken, etc.">Passionate community responder ready to support field relief and healthcare camps.</textarea>
+              <textarea id="enroll-vol-bio" class="form-input" rows="2" placeholder="Brief details on your background, service motivation, languages spoken..."></textarea>
             </div>
 
             <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -5249,7 +5406,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="enroll-ngo-location">Headquarters / City *</label>
-                <input type="text" id="enroll-ngo-location" class="form-input" placeholder="e.g. Fort, Mumbai, MH" value="Mumbai, Maharashtra" required />
+                <input type="text" id="enroll-ngo-location" class="form-input" placeholder="e.g. Fort, Mumbai, MH" required />
               </div>
             </div>
 
