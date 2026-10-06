@@ -539,7 +539,7 @@
 
     switch (state.activePage) {
       case 'dashboard':
-        container.innerHTML = renderVolunteerDashboard();
+        container.innerHTML = state.currentRole === 'ngo' ? renderNgoDashboard() : renderVolunteerDashboard();
         break;
       case 'profile':
         container.innerHTML = renderVolunteerProfile();
@@ -548,13 +548,13 @@
         container.innerHTML = renderOpportunitiesPage();
         break;
       case 'smart-match':
-        container.innerHTML = renderSmartMatchPage();
+        container.innerHTML = state.currentRole === 'ngo' ? renderNgoSmartMatchEngine() : renderSmartMatchPage();
         break;
       case 'event-details':
         container.innerHTML = renderEventDetailsPage(state.selectedEventId);
         break;
       case 'deployments':
-        container.innerHTML = renderDeploymentTrackingPage();
+        container.innerHTML = state.currentRole === 'ngo' ? renderNgoDeploymentsPage() : renderDeploymentTrackingPage();
         break;
       case 'ngo-dashboard':
         container.innerHTML = renderNgoDashboard();
@@ -572,7 +572,7 @@
         container.innerHTML = renderSettingsPage();
         break;
       default:
-        container.innerHTML = renderVolunteerDashboard();
+        container.innerHTML = state.currentRole === 'ngo' ? renderNgoDashboard() : renderVolunteerDashboard();
     }
   }
 
@@ -1152,13 +1152,36 @@
   }
 
   /* ========================================================
-     4. SMART MATCHING — KEY FEATURE
+     4. SMART MATCHING — AI NEURAL MATCH RADAR
   ======================================================== */
+  let smartMatchFilterCategory = 'ALL';
+  let smartMatchRadiusKm = 12;
+
+  function setSmartMatchCategory(cat) {
+    smartMatchFilterCategory = cat;
+    renderPageContent();
+  }
+
+  function setSmartMatchRadius(rad) {
+    smartMatchRadiusKm = parseInt(rad) || 12;
+    renderPageContent();
+  }
+
   function renderSmartMatchPage() {
     const user = state.currentUser;
-    const rawHeroOpp = state.opportunities.find(o => o.id === 'opp-med-01') || state.opportunities[0];
-    const heroOpp = normalizeOpportunity(rawHeroOpp, user);
-    const otherRecommendations = state.opportunities.filter(o => o.id !== (rawHeroOpp?.id || 'opp-med-01')).map(o => normalizeOpportunity(o, user));
+    
+    // Calculate normalized matches for all opportunities
+    let allMatches = state.opportunities.map(o => normalizeOpportunity(o, user));
+    
+    if (smartMatchFilterCategory !== 'ALL') {
+      allMatches = allMatches.filter(o => o.category.toLowerCase().includes(smartMatchFilterCategory.toLowerCase()));
+    }
+    
+    // Sort descending by match score
+    allMatches.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+
+    const topMatch = allMatches[0] || normalizeOpportunity(state.opportunities[0], user);
+    const otherMatches = allMatches.slice(1);
 
     return `
       <!-- TOP BANNER -->
@@ -1166,172 +1189,216 @@
         <div>
           <div class="ai-match-badge-large">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            AI SMART MATCH ENGINE
+            AI NEURAL MATCH RADAR • 4-FACTOR ALGORITHM
           </div>
-          <h1 style="font-size: 1.7rem; font-weight: 800; color: var(--white); margin-bottom: 6px;">
-            Intelligent Volunteer Allocation
+          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--white); margin-bottom: 6px;">
+            Intelligent Volunteer &amp; Skill Allocation
           </h1>
-          <p style="color: #bfdbfe; font-size: 0.92rem; max-width: 650px;">
-            Our neural matching model cross-references your verified certifications, distance matrix, availability slots, and historical reliability against urgent event needs.
+          <p style="color: #c7d2fe; font-size: 0.92rem; max-width: 680px; line-height: 1.5;">
+            Our neural matching model matches your verified certifications (<strong>${(user.skills || []).map(s => typeof s === 'string' ? s : s.name).slice(0, 3).join(', ')}</strong>), real-time GPS proximity, and schedule availability against open community drives.
           </p>
         </div>
 
-        <div style="text-align: right; background: rgba(255,255,255,0.1); padding: 16px 20px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.15);">
-          <div style="font-size: 0.75rem; text-transform: uppercase; color: #93c5fd; font-weight: 700;">Matching Accuracy</div>
-          <div style="font-size: 1.6rem; font-weight: 800; color: var(--white);">96.8%</div>
-          <div style="font-size: 0.72rem; color: #cbd5e1;">Zero Unmatched Deployments</div>
+        <div style="text-align: right; background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 18px 24px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.2);">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #a5b4fc; font-weight: 800; letter-spacing: 0.05em;">Algorithm Accuracy</div>
+          <div style="font-size: 2rem; font-weight: 900; color: var(--white); line-height: 1.1;">96.8%</div>
+          <div style="font-size: 0.75rem; color: #e0e7ff; margin-top: 4px;">Zero Unmatched Deployments</div>
         </div>
       </section>
 
-      <!-- LARGE HIGHLIGHTED CARD: MEDICAL RELIEF CAMP (92% MATCH) -->
+      <!-- INTERACTIVE MATCH SIMULATION & FILTER BAR -->
+      <div class="smart-match-filter-bar">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <span style="font-size: 0.82rem; font-weight: 800; color: var(--neutral-700); text-transform: uppercase; letter-spacing: 0.04em;">
+            Filter Domain:
+          </span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'ALL' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('ALL');">
+              All Drives (${state.opportunities.length})
+            </button>
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'Healthcare' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('Healthcare');">
+              🏥 Healthcare &amp; Medical
+            </button>
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'Hunger' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('Hunger');">
+              🍲 Food &amp; Relief
+            </button>
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'Education' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('Education');">
+              🎓 Teaching
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: var(--neutral-600);">Search Radius:</span>
+          <select class="form-input" style="padding: 5px 10px; font-size: 0.82rem; width: auto; font-weight: 700;" onchange="window.SahayakApp.setSmartMatchRadius(this.value);">
+            <option value="5" ${smartMatchRadiusKm === 5 ? 'selected' : ''}>Within 5 km</option>
+            <option value="12" ${smartMatchRadiusKm === 12 ? 'selected' : ''}>Within 12 km (Default)</option>
+            <option value="25" ${smartMatchRadiusKm === 25 ? 'selected' : ''}>Within 25 km</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- #1 HIGHEST RANKED MATCH HERO RADAR CARD -->
       <div class="smart-match-hero-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span class="badge badge-ai">★ Top Algorithmic Match</span>
-              <span class="badge badge-success">High Urgency</span>
-              <span style="font-size: 0.8rem; color: var(--neutral-500);">${heroOpp.organization}</span>
+              <span class="badge badge-ai" style="background: #4f46e5; color: #fff; font-weight: 800; font-size: 0.78rem;">
+                🥇 #1 BEST ALGORITHMIC FIT
+              </span>
+              <span class="badge ${topMatch.urgency === 'High' ? 'badge-danger' : 'badge-primary'}">${topMatch.urgency} Urgency</span>
+              <span style="font-size: 0.82rem; color: var(--neutral-500); font-weight: 600;">${topMatch.organization}</span>
             </div>
-            <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--primary-900);">${heroOpp.title}</h2>
-            <div style="display: flex; gap: 16px; font-size: 0.88rem; color: var(--neutral-600); margin-top: 6px;">
-              <span>📍 <strong>${heroOpp.distanceKm} km</strong> (${heroOpp.location.split(',')[0]})</span>
-              <span>🕐 <strong>${heroOpp.shiftTime}</strong></span>
-              <span>👥 <strong>${heroOpp.volunteersMatched} / ${heroOpp.volunteersRequired} Volunteers</strong></span>
+            <h2 style="font-size: 1.85rem; font-weight: 800; color: #1e1b4b;">${topMatch.title}</h2>
+            <div style="display: flex; gap: 18px; font-size: 0.88rem; color: var(--neutral-600); margin-top: 8px; flex-wrap: wrap;">
+              <span>📍 <strong>${topMatch.distanceKm} km</strong> (${topMatch.location.split(',')[0]})</span>
+              <span>🕐 <strong>${topMatch.shiftTime}</strong></span>
+              <span>👥 <strong>${topMatch.volunteersMatched} / ${topMatch.volunteersRequired} Volunteers Staffed</strong></span>
             </div>
           </div>
 
-          <div style="text-align: right;">
+          <div style="text-align: right; background: #eef2ff; padding: 12px 20px; border-radius: var(--radius-lg); border: 2px solid #c7d2fe;">
             <div class="match-score-big-display">
-              ${heroOpp.matchScore}<span class="match-score-pct">%</span>
+              ${topMatch.matchScore}<span class="match-score-pct">%</span>
             </div>
-            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary-700); letter-spacing: 0.04em;">
-              Composite Match
+            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #4338ca; letter-spacing: 0.05em;">
+              Composite Match Index
             </div>
           </div>
         </div>
 
         <!-- 4 FACTOR BREAKDOWN PROGRESS BARS -->
         <div class="match-factors-grid">
-          
           <div class="factor-bar-item">
             <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Skills Match
+              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Verified Skills Fit
               </span>
-              <span style="font-weight: 800; color: var(--primary-800);">${heroOpp.matchBreakdown.skills.score}%</span>
+              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.skills?.score || 96}%</span>
             </div>
             <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${heroOpp.matchBreakdown.skills.score}%;"></div>
+              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.skills?.score || 96}%;"></div>
             </div>
             <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${heroOpp.matchBreakdown.skills.label}
+              ${topMatch.matchBreakdown?.skills?.label || 'Direct match for First Aid & Triage'}
             </div>
           </div>
 
           <div class="factor-bar-item">
             <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Availability Match
+              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Schedule &amp; Availability
               </span>
-              <span style="font-weight: 800; color: var(--primary-800);">${heroOpp.matchBreakdown.availability.score}%</span>
+              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.availability?.score || 95}%</span>
             </div>
             <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${heroOpp.matchBreakdown.availability.score}%;"></div>
+              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.availability?.score || 95}%;"></div>
             </div>
             <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${heroOpp.matchBreakdown.availability.label}
+              ${topMatch.matchBreakdown?.availability?.label || 'Aligns with your active weekend availability'}
             </div>
           </div>
 
           <div class="factor-bar-item">
             <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Location Match
+              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Proximity Vector (Distance)
               </span>
-              <span style="font-weight: 800; color: var(--primary-800);">${heroOpp.matchBreakdown.location.score}%</span>
+              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.location?.score || 90}%</span>
             </div>
             <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${heroOpp.matchBreakdown.location.score}%;"></div>
+              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.location?.score || 90}%;"></div>
             </div>
             <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${heroOpp.matchBreakdown.location.label}
+              ${topMatch.matchBreakdown?.location?.label || `${topMatch.distanceKm} km away (inside your ${user.maxTravelRadiusKm || 12} km radius)`}
             </div>
           </div>
 
           <div class="factor-bar-item">
             <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Experience Match
+              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Experience &amp; Reliability
               </span>
-              <span style="font-weight: 800; color: var(--primary-800);">${heroOpp.matchBreakdown.experience.score}%</span>
+              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.experience?.score || 88}%</span>
             </div>
             <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${heroOpp.matchBreakdown.experience.score}%;"></div>
+              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.experience?.score || 88}%;"></div>
             </div>
             <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${heroOpp.matchBreakdown.experience.label}
+              ${topMatch.matchBreakdown?.experience?.label || `Matches ${user.experience || '3.5 yrs'} track record with 98% reliability`}
             </div>
           </div>
-
         </div>
 
         <!-- EXPLANATION CALLOUT -->
         <div class="ai-recommendation-quote">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2" style="flex-shrink:0; margin-top: 2px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" style="flex-shrink:0; margin-top: 2px;">
             <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
           <div>
-            <strong>AI Matching Rationale:</strong> “${heroOpp.matchExplanation}”
+            <strong>AI Neural Matching Rationale:</strong> “${topMatch.matchExplanation || 'Recommended because your verified certifications and proximity make you the top candidate for immediate deployment.'}”
           </div>
         </div>
 
         <!-- ACTION BUTTONS -->
-        <div style="display: flex; gap: 14px; align-items: center;">
-          <button class="btn btn-primary btn-lg" onclick="window.SahayakApp.acceptOpportunity('${heroOpp.id}');">
-            Accept Opportunity
+        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #4338ca, #6366f1); border: none; font-weight: 800; box-shadow: 0 4px 14px rgba(79,70,229,0.4);" onclick="window.SahayakApp.acceptOpportunity('${topMatch.id}');">
+            ⚡ Accept Opportunity &amp; Schedule Deployment
           </button>
-          <button class="btn btn-secondary btn-lg" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${heroOpp.id}' });">
-            View Full Event Details
+          <button class="btn btn-secondary btn-lg" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${topMatch.id}' });">
+            🔍 View Full Event Details
           </button>
         </div>
       </div>
 
-      <!-- OTHER RECOMMENDED OPPORTUNITIES WITH MATCH PERCENTAGES -->
+      <!-- COMPARATIVE RECOMMENDATION GRID (RANKED MATCHES) -->
       <div>
-        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900); margin-bottom: 16px;">
-          Other Intelligent Recommendations
-        </h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--primary-900);">
+              Comparative Ranked Matches
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--neutral-500);">Other community events matching your profile sorted by suitability score.</p>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.navigateTo('opportunities');">
+            View All Opportunities Catalog →
+          </button>
+        </div>
 
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-          ${otherRecommendations.map(opp => `
-            <div class="card" style="display: flex; flex-direction: column;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 20px;">
+          ${otherMatches.map((opp, idx) => `
+            <div class="card" style="display: flex; flex-direction: column; border-top: 4px solid #6366f1; transition: transform 0.2s ease;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                 <span class="badge badge-neutral">${opp.category}</span>
-                <span class="badge badge-ai" style="font-size: 0.85rem; font-weight: 800;">
-                  ${opp.matchScore}% Match
+                <span class="badge badge-ai" style="font-size: 0.88rem; font-weight: 800; background: #e0e7ff; color: #3730a3;">
+                  ★ #${idx + 2} • ${opp.matchScore}% Fit
                 </span>
               </div>
 
-              <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--primary-900); margin-bottom: 4px;">
+              <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--primary-900); margin-bottom: 4px;">
                 ${opp.title}
               </h4>
               <div style="font-size: 0.8rem; color: var(--neutral-500); margin-bottom: 12px;">
-                ${opp.organization} • 📍 ${opp.distanceKm} km
+                ${opp.organization} • 📍 ${opp.distanceKm} km away
               </div>
 
-              <p style="font-size: 0.84rem; color: var(--neutral-600); margin-bottom: 16px; flex: 1; line-height: 1.45;">
-                ${opp.description.substring(0, 110)}...
+              <p style="font-size: 0.84rem; color: var(--neutral-600); margin-bottom: 16px; flex: 1; line-height: 1.5;">
+                ${opp.description ? opp.description.substring(0, 115) + '...' : ''}
               </p>
 
+              <div style="background: #f8fafc; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 14px; font-size: 0.78rem; color: #475569;">
+                <strong>Key Skills:</strong> ${(opp.requiredSkills || []).slice(0, 2).join(', ')}
+              </div>
+
               <div style="display: flex; gap: 8px; margin-top: auto;">
-                <button class="btn btn-sm btn-primary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${opp.id}' });">
-                  View Details
+                <button class="btn btn-sm btn-secondary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${opp.id}' });">
+                  Details
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
+                <button class="btn btn-sm btn-primary" style="flex: 1; background: #4f46e5; border: none;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
                   Accept
                 </button>
               </div>
@@ -1625,25 +1692,40 @@
     return `
       <div class="deployment-container">
         
-        <!-- HEADER CARD WITH TITLE -->
-        <div class="deployment-header-card">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <span class="badge badge-primary" style="margin-bottom: 6px;">Active Volunteer Deployment Lifecycle</span>
-              <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--primary-900);">${dep.eventTitle}</h1>
-              <p style="color: var(--neutral-500); font-size: 0.9rem;">
-                Managed by ${dep.organization} • Token: <code style="color: var(--primary-800); font-weight: 700;">${dep.qrCodeToken}</code>
-              </p>
-            </div>
-            <div>
-              <span class="status-badge-giant ${dep.status.toLowerCase()}">
-                ● ${dep.status === 'DEPLOYED' ? 'SHIFT IN PROGRESS (LIVE)' : dep.status}
+        <!-- OPERATIONS CONSOLE TOP BANNER -->
+        <section class="welcome-hero" style="background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f766e 100%); color: var(--white); margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.35);">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span class="badge" style="background: rgba(255,255,255,0.2); color: var(--white); font-weight: 800; font-size: 0.76rem; letter-spacing: 0.05em;">
+                ⏱️ ON-GROUND OPERATIONS CONSOLE
               </span>
+              <span style="color: #a7f3d0; font-size: 0.82rem; font-weight: 600;">Shift Token: ${dep.qrCodeToken}</span>
             </div>
+            <h1 class="welcome-title" style="color: var(--white); font-size: 1.75rem;">${dep.eventTitle}</h1>
+            <p class="welcome-subtitle" style="color: #ecfdf5; font-size: 0.92rem;">Live field telemetry tracking, on-site geotagged photo proofs, task checklists, and instant service certification.</p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <span class="status-badge-giant ${dep.status.toLowerCase()}" style="font-size: 0.88rem; padding: 8px 18px;">
+              ● ${dep.status === 'DEPLOYED' ? 'LIVE ON-DUTY SHIFT' : dep.status === 'MATCHED' ? 'READY TO CLOCK IN' : 'SHIFT COMPLETED'}
+            </span>
+            <span style="color: #d1fae5; font-size: 0.75rem;">Supervised by ${dep.organization}</span>
+          </div>
+        </section>
+
+        <!-- HORIZONTAL STEP TRACKER CARD -->
+        <div class="deployment-header-card" style="padding: 20px 24px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--neutral-500); letter-spacing: 0.05em;">
+              4-Stage Deployment Progress
+            </span>
+            <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary-800);">
+              Current Stage: <strong>${dep.status}</strong>
+            </span>
           </div>
 
           <!-- HORIZONTAL STEP TRACKER: POSTED → MATCHED → DEPLOYED → COMPLETED -->
-          <div class="progress-stepper-horizontal">
+          <div class="progress-stepper-horizontal" style="margin: 20px 0 10px 0;">
             <div class="stepper-active-line" style="width: ${progressLineWidth};"></div>
 
             <!-- Step 1: POSTED -->
@@ -2536,6 +2618,309 @@
           <p style="font-size: 0.84rem; color: var(--neutral-600); margin-bottom: 12px;">Send high-priority sirens and SMS alerts to nearby volunteers within 5-15 km.</p>
           <span style="font-size: 0.8rem; font-weight: 700; color: var(--danger-600);">Trigger Broadcast Modal →</span>
         </div>
+      </div>
+    `;
+  }
+
+  /* ========================================================
+     NGO SIDE: AI CANDIDATE MATCHING & DISPATCH ENGINE
+  ======================================================== */
+  let selectedNgoEventId = 'opp-med-01';
+
+  function setSelectedNgoEvent(eventId) {
+    selectedNgoEventId = eventId;
+    renderPageContent();
+  }
+
+  function renderNgoSmartMatchEngine() {
+    const activeDrive = state.opportunities.find(o => o.id === selectedNgoEventId) || state.opportunities[0];
+    const driveSkills = activeDrive.requiredSkills || [];
+
+    // Calculate match score for all volunteers in roster
+    const rankedVolunteers = state.ngoVolunteers.map(vol => {
+      const volSkills = vol.skills || [];
+      const matchCount = driveSkills.filter(ds => volSkills.some(vs => vs.toLowerCase().includes(ds.toLowerCase()) || ds.toLowerCase().includes(vs.toLowerCase()))).length;
+      const skillScore = driveSkills.length ? Math.round((matchCount / driveSkills.length) * 100) : 85;
+      const distScore = (vol.distanceKm || 2.4) <= 12 ? 95 : 70;
+      const relScore = vol.reliability || 95;
+      const compositeScore = Math.min(99, Math.max(70, Math.round(skillScore * 0.5 + distScore * 0.3 + relScore * 0.2)));
+      return { ...vol, calculatedFit: compositeScore };
+    });
+
+    rankedVolunteers.sort((a, b) => b.calculatedFit - a.calculatedFit);
+
+    return `
+      <!-- NGO MATCH ENGINE HEADER -->
+      <section class="smart-match-header" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);">
+        <div>
+          <div class="ai-match-badge-large">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            NGO DISPATCH ENGINE • CANDIDATE MATCHING
+          </div>
+          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--white); margin-bottom: 6px;">
+            AI Volunteer Candidate Allocation Engine
+          </h1>
+          <p style="color: #c7d2fe; font-size: 0.92rem; max-width: 680px;">
+            Select an open NGO drive to rank all verified community volunteers by skill compatibility, geographic transit time, and reliability index.
+          </p>
+        </div>
+
+        <div style="text-align: right; background: rgba(255,255,255,0.12); padding: 18px 24px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.2);">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #a5b4fc; font-weight: 800;">Available Candidates</div>
+          <div style="font-size: 2rem; font-weight: 900; color: var(--white);">${rankedVolunteers.length} Active</div>
+          <div style="font-size: 0.75rem; color: #e0e7ff; margin-top: 4px;">Top Fit: ${rankedVolunteers[0]?.name} (${rankedVolunteers[0]?.calculatedFit}%)</div>
+        </div>
+      </section>
+
+      <!-- DRIVE SELECTION SELECTOR -->
+      <div class="smart-match-filter-bar">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <span style="font-size: 0.85rem; font-weight: 800; color: var(--neutral-800); text-transform: uppercase;">
+            🎯 Target NGO Drive:
+          </span>
+          <select class="form-input" style="padding: 8px 14px; font-weight: 700; width: auto; font-size: 0.9rem;" onchange="window.SahayakApp.setSelectedNgoEvent(this.value);">
+            ${state.opportunities.map(opp => `
+              <option value="${opp.id}" ${opp.id === activeDrive.id ? 'selected' : ''}>
+                ${opp.title} (${opp.category} • ${opp.volunteersMatched}/${opp.volunteersRequired} Staffed)
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <button class="btn btn-primary" style="background: linear-gradient(135deg, #4f46e5, #6366f1); border: none; font-weight: 800;" onclick="window.SahayakApp.showToast('AI Auto-Dispatched top 5 candidate volunteers to ${activeDrive.title}!', 'success');">
+          ⚡ 1-Click Auto-Staff Top Candidates
+        </button>
+      </div>
+
+      <!-- CANDIDATES RANKING TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">AI Ranked Volunteer Matches for “${activeDrive.title}”</h3>
+            <p style="font-size: 0.82rem; color: var(--neutral-500);">Required Skills: <strong>${driveSkills.join(', ')}</strong> • Location: <strong>${activeDrive.location}</strong></p>
+          </div>
+          <span class="badge badge-ai" style="font-size: 0.85rem; font-weight: 800; background: #e0e7ff; color: #3730a3;">
+            ${rankedVolunteers.filter(v => v.calculatedFit >= 85).length} High Match Candidates
+          </span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Rank &amp; Candidate</th>
+                <th>AI Match Score</th>
+                <th>Key Skills &amp; Certs</th>
+                <th>Distance &amp; Location</th>
+                <th>Reliability</th>
+                <th>Availability Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rankedVolunteers.map((vol, idx) => `
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span style="font-weight: 900; color: #4338ca; font-size: 0.95rem; width: 24px;">#${idx + 1}</span>
+                      <div class="user-avatar-circle" style="width: 34px; height: 34px; font-size: 0.82rem; background: #312e81;">${vol.avatar || vol.name.split(' ').map(n=>n[0]).join('')}</div>
+                      <div>
+                        <div style="font-weight: 800; color: var(--primary-900); font-size: 0.92rem;">${vol.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--neutral-500);">${vol.role || 'Verified Responder'}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-ai" style="font-weight: 800; font-size: 0.88rem; background: ${vol.calculatedFit >= 90 ? '#dcfce7; color: #166534;' : '#e0e7ff; color: #3730a3;'}">
+                      ${vol.calculatedFit}% Match
+                    </span>
+                  </td>
+                  <td>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                      ${(vol.skills || []).map(s => `<span class="badge badge-neutral" style="font-size: 0.72rem;">${s}</span>`).join('')}
+                    </div>
+                  </td>
+                  <td>📍 ${vol.distanceKm || 2.4} km (${vol.location ? vol.location.split(',')[0] : 'Mumbai'})</td>
+                  <td>
+                    <span style="font-weight: 800; color: var(--success-600);">${vol.reliability || 98}%</span>
+                  </td>
+                  <td>
+                    <span class="badge ${vol.status === 'Available' ? 'badge-success' : vol.status === 'Matched' ? 'badge-primary' : 'badge-neutral'}">
+                      ${vol.status || 'Available'}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-primary" style="font-size: 0.78rem; padding: 4px 10px;" onclick="window.SahayakApp.openAssignVolunteerModal('${vol.id}');">
+                      Assign Drive
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ========================================================
+     NGO SIDE: LIVE GROUND FLEET & DEPLOYMENTS COMMAND CENTER
+  ======================================================== */
+  function renderNgoDeploymentsPage() {
+    return `
+      <!-- NGO DEPLOYMENT COMMAND CENTER BANNER -->
+      <section class="welcome-hero" style="background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f766e 100%); color: var(--white); margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.35);">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span class="badge" style="background: rgba(255,255,255,0.2); color: var(--white); font-weight: 800; font-size: 0.76rem; letter-spacing: 0.05em;">
+              🗺️ GROUND FLEET COMMAND CENTER
+            </span>
+            <span style="color: #a7f3d0; font-size: 0.82rem; font-weight: 600;">Real-time Telemetry Active</span>
+          </div>
+          <h1 class="welcome-title" style="color: var(--white); font-size: 1.75rem;">Active Field Deployments &amp; Volunteer Fleet</h1>
+          <p class="welcome-subtitle" style="color: #ecfdf5; font-size: 0.92rem;">Live GPS geofence tracking, on-site verified clock-in photo audits, shift stopwatches, and emergency SOS muster points.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-sm btn-secondary" style="color: #064e3b; background: #fff; font-weight: 800;" onclick="window.SahayakApp.showToast('Refreshing live telemetry pings across all sectors...', 'primary');">
+            🔄 Refresh Telemetry
+          </button>
+          <button class="btn btn-sm btn-secondary" style="color: #ef4444; background: #fee2e2; border-color: #fca5a5; font-weight: 800;" onclick="window.SahayakApp.openEmergencyBroadcastModal();">
+            🚨 Emergency Alert
+          </button>
+        </div>
+      </section>
+
+      <!-- 4 FLEET STATUS STATS -->
+      <div class="ngo-stats-grid" style="margin-bottom: 24px;">
+        <div class="ngo-stat-box" style="border-top: 4px solid #059669;">
+          <span class="ngo-stat-num" style="color: #059669;">14</span>
+          <span class="ngo-stat-title">Volunteers On Duty (Live Shift)</span>
+        </div>
+        <div class="ngo-stat-box" style="border-top: 4px solid #2563eb;">
+          <span class="ngo-stat-num" style="color: #2563eb;">8</span>
+          <span class="ngo-stat-title">En Route to Muster Point</span>
+        </div>
+        <div class="ngo-stat-box" style="border-top: 4px solid #10b981;">
+          <span class="ngo-stat-num" style="color: #10b981;">99.4%</span>
+          <span class="ngo-stat-title">GPS Geofence Compliance</span>
+        </div>
+        <div class="ngo-stat-box" style="border-top: 4px solid #f59e0b;">
+          <span class="ngo-stat-num" style="color: #f59e0b;">0</span>
+          <span class="ngo-stat-title">Overdue Check-Outs</span>
+        </div>
+      </div>
+
+      <!-- FLEET MAP & ACTIVE ROSTER GRID -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+        
+        <!-- LIVE GROUND FLEET MAP CANVAS -->
+        <div class="mock-map-card">
+          <div class="mock-map-header">
+            <div style="font-weight: 800; color: var(--primary-900); font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+              <span class="pulse-green-dot"></span> Mumbai Field Sectors (Live Geo-Fleet)
+            </div>
+            <span class="badge badge-success" style="font-size: 0.72rem;">14 GPS Signals Active</span>
+          </div>
+
+          <div class="map-view-canvas" style="height: 320px;">
+            <svg class="map-grid-svg" viewBox="0 0 400 320">
+              <defs>
+                <pattern id="ngo-fleet-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="40" y2="0" stroke="#cbd5e1" stroke-width="1.2" />
+                  <line x1="0" y1="0" x2="0" y2="40" stroke="#cbd5e1" stroke-width="1.2" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="#e0f2fe" />
+              <rect width="100%" height="100%" fill="url(#ngo-fleet-grid)" opacity="0.6" />
+
+              <!-- Sector Road Tracks -->
+              <path d="M 40,280 Q 180,180 320,100" fill="none" stroke="#94a3b8" stroke-width="7" />
+              <path d="M 60,80 Q 200,160 360,260" fill="none" stroke="#94a3b8" stroke-width="7" />
+
+              <!-- Sector 1: Andheri Health Centre -->
+              <circle cx="280" cy="110" r="28" fill="rgba(16, 185, 129, 0.2)" />
+              <circle cx="280" cy="110" r="10" fill="#059669" stroke="#ffffff" stroke-width="3" />
+              
+              <!-- Sector 2: Dharavi Transit -->
+              <circle cx="160" cy="210" r="32" fill="rgba(37, 99, 235, 0.2)" />
+              <circle cx="160" cy="210" r="10" fill="#2563eb" stroke="#ffffff" stroke-width="3" />
+
+              <!-- Sector 3: Kurla Relief -->
+              <circle cx="90" cy="110" r="22" fill="rgba(220, 38, 38, 0.2)" />
+              <circle cx="90" cy="110" r="10" fill="#dc2626" stroke="#ffffff" stroke-width="3" />
+            </svg>
+
+            <!-- Map Pin Floating HTML Overlays -->
+            <div class="map-marker-pin" style="top: 110px; left: 280px;">
+              <div class="map-marker-bubble" style="background: #065f46;">📍 Andheri (6 Vols On-Duty)</div>
+            </div>
+
+            <div class="map-marker-pin" style="top: 210px; left: 160px;">
+              <div class="map-marker-bubble" style="background: #1e40af;">📍 Dharavi (5 Vols On-Duty)</div>
+            </div>
+
+            <div class="map-marker-pin" style="top: 110px; left: 90px;">
+              <div class="map-marker-bubble" style="background: #991b1b;">🚨 Kurla SOS (3 Vols Deployed)</div>
+            </div>
+          </div>
+
+          <div class="map-footer-bar">
+            <span style="font-size: 0.78rem; color: #475569;">All teams reporting at 30-sec telemetry refresh interval.</span>
+            <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.showToast('All 14 field telemetry beacons confirmed active.', 'success');">
+              Ping All Volunteers
+            </button>
+          </div>
+        </div>
+
+        <!-- RECENT PHOTO PROOF AUDIT STREAM -->
+        <div class="card">
+          <div class="card-header" style="margin-bottom: 12px;">
+            <div>
+              <h4 style="font-weight: 800; color: var(--primary-900); font-size: 1.05rem;">Recent On-Site Photo Audits</h4>
+              <p style="font-size: 0.78rem; color: var(--neutral-500);">Live check-in selfie proofs with verified GPS watermarks.</p>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.openPhotoProofViewer();">
+              Audit Viewer
+            </button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="user-avatar-circle" style="width: 36px; height: 36px; background: #059669; font-size: 0.85rem;">RS</div>
+                <div>
+                  <div style="font-weight: 800; font-size: 0.85rem; color: var(--primary-900);">Rahul Sharma</div>
+                  <div style="font-size: 0.74rem; color: var(--neutral-500);">Medical Camp • Clocked in 4h 3m ago</div>
+                </div>
+              </div>
+              <span class="badge badge-success" style="font-size: 0.72rem;">✓ Verified GPS</span>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="user-avatar-circle" style="width: 36px; height: 36px; background: #2563eb; font-size: 0.85rem;">PV</div>
+                <div>
+                  <div style="font-weight: 800; font-size: 0.85rem; color: var(--primary-900);">Priya Verma</div>
+                  <div style="font-size: 0.74rem; color: var(--neutral-500);">Registration &amp; Vitals • Clocked in 2h 15m ago</div>
+                </div>
+              </div>
+              <span class="badge badge-success" style="font-size: 0.72rem;">✓ Verified GPS</span>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="user-avatar-circle" style="width: 36px; height: 36px; background: #d97706; font-size: 0.85rem;">AS</div>
+                <div>
+                  <div style="font-weight: 800; font-size: 0.85rem; color: var(--primary-900);">Ananya Sen</div>
+                  <div style="font-size: 0.74rem; color: var(--neutral-500);">Team Lead • Clocked in 4h 10m ago</div>
+                </div>
+              </div>
+              <span class="badge badge-success" style="font-size: 0.72rem;">✓ Verified GPS</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     `;
   }
@@ -3730,6 +4115,9 @@
     handleVolunteerSearch,
     handleVolunteerStatusFilter,
     updateRadius,
+    setSmartMatchCategory,
+    setSmartMatchRadius,
+    setSelectedNgoEvent,
     saveSettings,
     saveSupabaseSettings,
     disconnectSupabase,
