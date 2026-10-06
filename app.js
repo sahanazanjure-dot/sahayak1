@@ -80,6 +80,67 @@
     }
   }
 
+  /* ========================================================
+     AUTHENTICATION & USER REGISTRY (REGISTRATION FIRST)
+  ======================================================== */
+  const STORAGE_KEY_REGISTERED_USERS = 'sahayak_registered_users';
+
+  function getRegisteredUsers() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_REGISTERED_USERS);
+      if (data) return JSON.parse(data);
+    } catch (e) {}
+    // Seed initial demo records so existing test users can also sign in
+    const initialUsers = [
+      {
+        id: 'vol-rahul-01',
+        name: 'Rahul Sharma',
+        email: 'rahul.sharma@volunteer.in',
+        password: 'password123',
+        role: 'volunteer',
+        mobile: '+91 98204 88321',
+        location: 'Andheri West, Mumbai',
+        skills: [{ name: 'First Aid & CPR', level: 'Expert', verified: true }, { name: 'Emergency Triage', level: 'Advanced', verified: true }],
+        availability: 'Weekends & Weekday Evenings (15 hrs/week)',
+        bio: 'Certified First Aid provider with 3+ years active field service.'
+      },
+      {
+        id: 'ngo-helping-hands',
+        name: 'Helping Hands Foundation',
+        email: 'coordination@helpinghands.ngo',
+        password: 'password123',
+        role: 'ngo',
+        mobile: '+91 22 2650 9988',
+        location: 'Bandra Kurla Complex, Mumbai',
+        sector: 'Healthcare & Relief',
+        regNumber: 'MH/2018/NGO-004821'
+      }
+    ];
+    try {
+      localStorage.setItem(STORAGE_KEY_REGISTERED_USERS, JSON.stringify(initialUsers));
+    } catch (e) {}
+    return initialUsers;
+  }
+
+  function findRegisteredUser(email) {
+    if (!email) return null;
+    const users = getRegisteredUsers();
+    return users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  function saveRegisteredUser(userObj) {
+    const users = getRegisteredUsers();
+    const existingIdx = users.findIndex(u => u.email.toLowerCase() === userObj.email.toLowerCase());
+    if (existingIdx >= 0) {
+      users[existingIdx] = { ...users[existingIdx], ...userObj };
+    } else {
+      users.push(userObj);
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY_REGISTERED_USERS, JSON.stringify(users));
+    } catch (e) {}
+  }
+
   let authMode = 'signin'; // 'signin' | 'signup'
 
   function setAuthMode(mode) {
@@ -88,6 +149,8 @@
     const tabSignup = document.getElementById('tab-mode-signup');
     const groupName = document.getElementById('group-auth-name');
     const submitBtn = document.getElementById('btn-login-submit');
+    const errBanner = document.getElementById('auth-error-banner');
+    if (errBanner) errBanner.style.display = 'none';
 
     if (mode === 'signup') {
       if (tabSignin) {
@@ -118,7 +181,7 @@
     }
   }
 
-  function applyUserData(displayName, email, role) {
+  function applyUserData(displayName, email, role, extra = {}) {
     const rawName = displayName || (email ? email.split('@')[0] : 'Volunteer');
     const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
@@ -127,11 +190,19 @@
       state.ngoUser.name = formattedName.includes(' ') || formattedName.toLowerCase().includes('ngo') || formattedName.toLowerCase().includes('foundation') ? formattedName : `${formattedName} Relief Org`;
       state.ngoUser.email = email || 'coordination@helpinghands.ngo';
       state.ngoUser.avatar = formattedName.slice(0, 2).toUpperCase();
+      if (extra.location) state.ngoUser.location = extra.location;
+      if (extra.mobile) state.ngoUser.mobile = extra.mobile;
+      if (extra.regNumber) state.ngoUser.regNumber = extra.regNumber;
     } else {
       state.currentRole = role || 'volunteer';
       state.currentUser.name = formattedName;
       state.currentUser.email = email || 'volunteer@sahayak.in';
       state.currentUser.avatar = formattedName.slice(0, 2).toUpperCase();
+      if (extra.location) state.currentUser.location = extra.location;
+      if (extra.skills && extra.skills.length) state.currentUser.skills = extra.skills;
+      if (extra.mobile) state.currentUser.mobile = extra.mobile;
+      if (extra.bio) state.currentUser.bio = extra.bio;
+      if (extra.availability) state.currentUser.availability = extra.availability;
       if (state.activeDeployment) {
         state.activeDeployment.volunteerName = formattedName;
       }
@@ -143,6 +214,8 @@
     const passInput = document.getElementById('auth-password');
     const nameInput = document.getElementById('auth-name');
     const submitBtn = document.getElementById('btn-login-submit');
+    const errBanner = document.getElementById('auth-error-banner');
+    if (errBanner) errBanner.style.display = 'none';
 
     const email = (emailInput?.value || '').trim();
     const password = (passInput?.value || '').trim();
@@ -160,85 +233,108 @@
     const prevBtnText = submitBtn ? submitBtn.textContent : '';
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = authMode === 'signup' ? 'Creating Account...' : 'Signing In...';
+      submitBtn.textContent = authMode === 'signup' ? 'Registering Account...' : 'Verifying Account...';
     }
 
     try {
       if (authMode === 'signup') {
         const displayName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
 
-        if (window.SahayakDB && window.SahayakDB.isConfigured()) {
-          const res = await window.SahayakDB.signUp({
-            email,
-            password,
-            name: displayName,
-            role: state.currentRole,
-            mobile: '+91 98200 00000'
-          });
-
-          applyUserData(displayName, email, state.currentRole);
-          showToast(`Account created for ${displayName}! Welcome to Sahayak.`, 'success');
-          handleLogin();
-        } else {
-          applyUserData(displayName, email, state.currentRole);
-          showToast(`Account created for ${displayName}. Welcome!`, 'success');
-          handleLogin();
+        // Check if already registered
+        const existing = findRegisteredUser(email);
+        if (existing) {
+          showToast(`An account with ${email} is already registered. Please Sign In.`, 'danger');
+          if (errBanner) {
+            errBanner.innerHTML = `⚠️ An account with <strong>${email}</strong> is already registered. Please sign in with your password.`;
+            errBanner.style.display = 'block';
+          }
+          return;
         }
-      } else {
-        // Sign In
-        const defaultName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
 
+        const newUserRecord = {
+          id: `usr-${Date.now()}`,
+          name: displayName,
+          email: email,
+          password: password,
+          role: state.currentRole,
+          mobile: '+91 98200 00000',
+          location: 'Mumbai, Maharashtra',
+          registeredAt: new Date().toISOString()
+        };
+
+        saveRegisteredUser(newUserRecord);
+
+        if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+          try {
+            await window.SahayakDB.signUp({
+              email,
+              password,
+              name: displayName,
+              role: state.currentRole,
+              mobile: '+91 98200 00000'
+            });
+          } catch (e) {}
+        }
+
+        applyUserData(displayName, email, state.currentRole, newUserRecord);
+        showToast(`Registration complete for ${displayName}! Welcome to Sahayak.`, 'success');
+        handleLogin();
+      } else {
+        // Sign In Mode: STRICT VERIFICATION — USER MUST BE REGISTERED FIRST
+        const existingUser = findRegisteredUser(email);
+
+        let supabaseUser = null;
         if (window.SahayakDB && window.SahayakDB.isConfigured()) {
           try {
             const res = await window.SahayakDB.signIn({ email, password });
             if (res && res.user) {
-              const meta = res.user.user_metadata || {};
-              let userDisplayName = meta.name || meta.full_name || defaultName;
-              let userRole = meta.role || state.currentRole;
-
-              // Check if a volunteer record exists in Supabase
-              try {
-                const vols = await window.SahayakDB.getVolunteers();
-                const matchedVol = vols?.find(v => v.email?.toLowerCase() === email.toLowerCase());
-                if (matchedVol && matchedVol.name) {
-                  userDisplayName = matchedVol.name;
-                  if (matchedVol.role) userRole = matchedVol.role;
-                }
-              } catch (vErr) {}
-
-              applyUserData(userDisplayName, email, userRole);
-              showToast(`Welcome back, ${userDisplayName}!`, 'success');
-              handleLogin();
-              return;
+              supabaseUser = res.user;
             }
-          } catch (authErr) {
-            console.warn('Supabase sign-in notice:', authErr.message);
-            if (email === 'rahul.sharma@volunteer.in') {
-              applyUserData('Rahul Sharma', email, 'volunteer');
-              showToast(`Logged in with Demo Profile (Rahul Sharma).`, 'primary');
-              handleLogin();
-              return;
-            } else if (email === 'coordination@helpinghands.ngo') {
-              applyUserData('Helping Hands Foundation', email, 'ngo');
-              showToast(`Logged in with Demo NGO Profile.`, 'primary');
-              handleLogin();
-              return;
-            }
-
-            // Fallback for custom user credentials
-            applyUserData(defaultName, email, state.currentRole);
-            showToast(`Signed in as ${defaultName}.`, 'primary');
-            handleLogin();
-            return;
-          }
-        } else {
-          applyUserData(defaultName, email, state.currentRole);
-          handleLogin();
+          } catch (sbErr) {}
         }
+
+        // If not registered in either Supabase or Local Registry -> BLOCK LOGIN
+        if (!existingUser && !supabaseUser) {
+          showToast(`❌ Account not found. You must register first before logging in.`, 'danger');
+          if (errBanner) {
+            errBanner.innerHTML = `
+              <div style="font-weight: 800; margin-bottom: 4px;">⚠️ Access Denied: Unregistered Account</div>
+              <div>No registered account found for <strong>${email}</strong>. New users must complete the registration form before logging in.</div>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button type="button" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.75rem; background: #2563eb; border: none;" onclick="window.SahayakApp.openVolunteerEnrollmentModal();">
+                  🤝 Register as Volunteer
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.75rem; background: #059669; border: none;" onclick="window.SahayakApp.openNgoEnrollmentModal();">
+                  🏢 Register as NGO
+                </button>
+              </div>
+            `;
+            errBanner.style.display = 'block';
+          }
+          return;
+        }
+
+        // Verify password if local user record exists
+        if (existingUser && existingUser.password && existingUser.password !== password) {
+          showToast(`❌ Incorrect password for ${email}. Please check your credentials.`, 'danger');
+          if (errBanner) {
+            errBanner.innerHTML = `❌ Incorrect password for <strong>${email}</strong>. Please enter the password you used during registration.`;
+            errBanner.style.display = 'block';
+          }
+          return;
+        }
+
+        // Account is verified!
+        const resolvedRole = existingUser?.role || supabaseUser?.user_metadata?.role || state.currentRole;
+        const resolvedName = existingUser?.name || supabaseUser?.user_metadata?.name || (email.split('@')[0]);
+
+        applyUserData(resolvedName, email, resolvedRole, existingUser || {});
+        showToast(`Welcome back, ${resolvedName}! Logged in successfully.`, 'success');
+        handleLogin();
       }
     } catch (err) {
       console.error('Auth operation error:', err);
-      showToast(err.message || 'Authentication failed. Please try again.', 'danger');
+      showToast(err.message || 'Authentication error. Please try again.', 'danger');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -3886,15 +3982,57 @@
     }));
 
     if (!name || !email || !password) {
-      showToast('Please fill all required fields.', 'danger');
+      showToast('Please fill in your name, email, and password.', 'danger');
+      return;
+    }
+
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', 'danger');
+      return;
+    }
+
+    // Check if email already registered
+    const existing = findRegisteredUser(email);
+    if (existing) {
+      showToast(`An account with ${email} already exists. Please Sign In.`, 'danger');
       return;
     }
 
     const btn = document.getElementById('btn-submit-enroll-vol');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Enrolling in Supabase...';
+      btn.textContent = 'Creating Volunteer Account...';
     }
+
+    const newVolunteerAccount = {
+      id: `vol-${Date.now()}`,
+      name: name,
+      email: email,
+      password: password,
+      role: 'volunteer',
+      mobile: mobile || '+91 98200 00000',
+      location: location || 'Mumbai, Maharashtra',
+      bio: bio || 'Passionate community volunteer ready for field relief.',
+      skills: checkedSkills.length ? checkedSkills : [{ name: 'First Aid & CPR', level: 'Intermediate', verified: true }],
+      availability: availability || 'Weekends & Evenings',
+      registeredAt: new Date().toISOString()
+    };
+
+    saveRegisteredUser(newVolunteerAccount);
+
+    // Also add to active NGO volunteer management roster
+    state.ngoVolunteers.unshift({
+      id: newVolunteerAccount.id,
+      name: name,
+      email: email,
+      mobile: mobile || '+91 98200 00000',
+      role: 'Registered Volunteer',
+      location: location || 'Mumbai',
+      skills: checkedSkills.map(s => s.name),
+      status: 'Available',
+      reliability: 100,
+      avatar: name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase()
+    });
 
     try {
       if (window.SahayakDB && window.SahayakDB.isConfigured()) {
@@ -3909,25 +4047,14 @@
           availability
         });
       }
-
-      applyUserData(name, email, 'volunteer');
-      state.currentUser.skills = checkedSkills.length ? checkedSkills : state.currentUser.skills;
-      state.currentUser.location = location || state.currentUser.location;
-      state.currentUser.bio = bio || state.currentUser.bio;
-      state.currentUser.availability = availability || state.currentUser.availability;
-      state.currentUser.mobile = mobile || state.currentUser.mobile;
-
-      closeModal();
-      showToast(`Welcome to Sahayak, ${name}! Your volunteer profile is active.`, 'success');
-      handleLogin();
     } catch (err) {
-      console.error('Enrollment error:', err);
-      // Fallback
-      applyUserData(name, email, 'volunteer');
-      closeModal();
-      showToast(`Volunteer enrolled! Notice: ${err.message || 'Synced locally'}`, 'primary');
-      handleLogin();
+      console.warn('Supabase sync notice:', err.message);
     }
+
+    applyUserData(name, email, 'volunteer', newVolunteerAccount);
+    closeModal();
+    showToast(`🎉 Registration successful! Welcome to Sahayak, ${name}.`, 'success');
+    handleLogin();
   }
 
   function openNgoEnrollmentModal() {
@@ -4030,11 +4157,39 @@
       return;
     }
 
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', 'danger');
+      return;
+    }
+
+    // Check if email already registered
+    const existing = findRegisteredUser(email);
+    if (existing) {
+      showToast(`An account with ${email} already exists. Please Sign In.`, 'danger');
+      return;
+    }
+
     const btn = document.getElementById('btn-submit-enroll-ngo');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Registering NGO on Supabase...';
+      btn.textContent = 'Registering NGO Portal...';
     }
+
+    const newNgoAccount = {
+      id: `ngo-${Date.now()}`,
+      name: orgName,
+      email: email,
+      password: password,
+      role: 'ngo',
+      mobile: mobile || '+91 22 2600 0000',
+      location: location || 'Mumbai, Maharashtra',
+      sector: sector || 'Community Relief',
+      regNumber: darpanId || `MH/${new Date().getFullYear()}/NGO-${Math.floor(1000 + Math.random() * 9000)}`,
+      website: website || '',
+      registeredAt: new Date().toISOString()
+    };
+
+    saveRegisteredUser(newNgoAccount);
 
     try {
       if (window.SahayakDB && window.SahayakDB.isConfigured()) {
@@ -4050,22 +4205,14 @@
           website
         });
       }
-
-      applyUserData(orgName, email, 'ngo');
-      state.ngoUser.name = orgName;
-      state.ngoUser.location = location || state.ngoUser.location;
-      state.ngoUser.email = email;
-
-      closeModal();
-      showToast(`NGO Organization ${orgName} registered successfully!`, 'success');
-      handleLogin();
     } catch (err) {
-      console.error('NGO registration error:', err);
-      applyUserData(orgName, email, 'ngo');
-      closeModal();
-      showToast(`NGO registered! Notice: ${err.message || 'Synced locally'}`, 'primary');
-      handleLogin();
+      console.warn('Supabase NGO sync notice:', err.message);
     }
+
+    applyUserData(orgName, email, 'ngo', newNgoAccount);
+    closeModal();
+    showToast(`🏢 NGO Organization "${orgName}" registered successfully!`, 'success');
+    handleLogin();
   }
 
   /* ========================================================
@@ -4176,15 +4323,12 @@
         tab.classList.add('active');
         state.currentRole = tab.getAttribute('data-role');
 
+        const errBanner = document.getElementById('auth-error-banner');
+        if (errBanner) errBanner.style.display = 'none';
+
         const emailInput = document.getElementById('auth-email');
-        if (emailInput && !emailInput.value.includes('@custom')) {
-          if (state.currentRole === 'ngo') {
-            emailInput.value = 'coordination@helpinghands.ngo';
-          } else if (state.currentRole === 'organizer') {
-            emailInput.value = 'organizer@reliefmesh.org';
-          } else {
-            emailInput.value = 'rahul.sharma@volunteer.in';
-          }
+        if (emailInput) {
+          emailInput.placeholder = state.currentRole === 'ngo' ? 'Enter registered NGO email' : 'Enter registered volunteer email';
         }
       });
     });
