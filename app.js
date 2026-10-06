@@ -934,7 +934,7 @@
               </div>
 
               <div style="display: flex; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--neutral-100);">
-                <button class="btn btn-primary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${medOpp.id}' });">
+                <button class="btn btn-primary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('opportunities');">
                   View Opportunity →
                 </button>
                 <button class="btn btn-secondary" onclick="window.SahayakApp.navigateTo('smart-match');">
@@ -3979,7 +3979,7 @@
           <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.openEmergencyBroadcastModal();" style="color: var(--danger-600); font-weight: 700;">
             🚨 Broadcast Emergency
           </button>
-          <button class="btn btn-sm btn-primary" style="background-color: var(--white); color: var(--primary-800);" onclick="window.SahayakApp.showToast('Opening New Event Creator Modal...', 'primary');">
+          <button class="btn btn-sm btn-primary" style="background-color: var(--white); color: var(--primary-800); font-weight: 800;" onclick="window.SahayakApp.openCreateEventModal();">
             + Create New Event
           </button>
         </div>
@@ -4077,7 +4077,7 @@
                     <div style="font-size: 1.8rem; margin-bottom: 6px;">🏢</div>
                     <div style="font-weight: 800; font-size: 0.95rem; color: var(--primary-900); margin-bottom: 4px;">No Active Drives Posted Yet</div>
                     <p style="font-size: 0.82rem; color: var(--neutral-500); margin-bottom: 12px;">Create your first volunteer requirement or emergency dispatch drive to mobilize verified volunteers.</p>
-                    <button class="btn btn-sm btn-primary" onclick="window.SahayakApp.showToast('Opening Event Creation Portal...', 'primary');">
+                    <button class="btn btn-sm btn-primary" onclick="window.SahayakApp.openCreateEventModal();">
                       + Create Volunteer Requirement
                     </button>
                   </td>
@@ -4614,6 +4614,245 @@
     closeModal();
     showToast(`Assigned ${vol.name} to ${selectedEvent}! Deployment pass issued.`, 'success');
     renderPageContent();
+  }
+
+  /* ========================================================
+     NGO: CREATE NEW EVENT / VOLUNTEER REQUIREMENT
+  ======================================================== */
+  function openCreateEventModal() {
+    const ngo = state.ngoUser;
+
+    openModal(`
+      <div class="modal-window" style="max-width: 600px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #0f3d87); color: #fff;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><path d="M12 5v14M5 12h14"></path></svg>
+            <h3 style="font-size: 1.18rem; font-weight: 800; color: #fff; margin: 0;">Create New Volunteer Requirement / Drive</h3>
+          </div>
+          <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
+        </div>
+
+        <div class="modal-body" style="overflow-y: auto; padding: 20px; flex: 1;">
+          <form id="form-create-event" onsubmit="event.preventDefault(); window.SahayakApp.submitCreateEvent();">
+            <div class="form-group">
+              <label class="form-label" for="new-event-title">Drive / Event Title *</label>
+              <input type="text" id="new-event-title" class="form-input" placeholder="e.g. Mega Blood Donation & Primary Health Drive" required />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label" for="new-event-category">Category / Cause *</label>
+                <select id="new-event-category" class="form-input" required>
+                  <option value="Healthcare & Relief">Healthcare &amp; Relief</option>
+                  <option value="Hunger Relief">Hunger Relief &amp; Food Distribution</option>
+                  <option value="Education">Child Education &amp; Mentorship</option>
+                  <option value="Emergency & Disaster">Emergency &amp; Disaster Response</option>
+                  <option value="Environment & Civic Care">Environment &amp; Civic Care</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-event-urgency">Priority Level</label>
+                <select id="new-event-urgency" class="form-input">
+                  <option value="Normal">Normal Priority</option>
+                  <option value="Medium" selected>Medium Priority</option>
+                  <option value="High">High Priority</option>
+                  <option value="Urgent">Urgent / Emergency SOS</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label" for="new-event-location">Venue / Location (Mumbai) *</label>
+                <input type="text" id="new-event-location" class="form-input" placeholder="e.g. Bandra Civic Ground, Mumbai" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-event-volunteers">Volunteers Required *</label>
+                <input type="number" id="new-event-volunteers" class="form-input" min="1" max="500" value="20" required />
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label" for="new-event-date">Date *</label>
+                <input type="text" id="new-event-date" class="form-input" placeholder="e.g. Tomorrow, Oct 7, 2026" value="Tomorrow, Oct 7, 2026" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-event-time">Shift Time *</label>
+                <input type="text" id="new-event-time" class="form-input" placeholder="e.g. 9:00 AM – 1:00 PM" value="9:00 AM – 1:00 PM" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Required Volunteer Skills</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: var(--neutral-50); border-radius: var(--radius-md); border: 1px solid var(--neutral-200);">
+                <label class="checkbox-label" style="font-size: 0.8rem;">
+                  <input type="checkbox" name="event-skills" value="First Aid & CPR" checked />
+                  <span>First Aid &amp; CPR</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem;">
+                  <input type="checkbox" name="event-skills" value="Crowd Management" checked />
+                  <span>Crowd Management</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem;">
+                  <input type="checkbox" name="event-skills" value="Registration & Vitals" />
+                  <span>Registration &amp; Vitals</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem;">
+                  <input type="checkbox" name="event-skills" value="Emergency Triage" />
+                  <span>Emergency Triage</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem;">
+                  <input type="checkbox" name="event-skills" value="Food Handling & Distribution" />
+                  <span>Food Handling</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem;">
+                  <input type="checkbox" name="event-skills" value="Community Mentorship" />
+                  <span>Community Mentorship</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-event-desc">Event Description &amp; Objectives *</label>
+              <textarea id="new-event-desc" class="form-input" rows="3" placeholder="Provide background on the community initiative, volunteer roles, and beneficiaries served..." required>Community relief and support drive organized by ${ngo.name || 'Helping Hands Foundation'}. Volunteers will assist field staff with operations, registration, and beneficiary assistance.</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label" for="new-event-contact-name">Lead Supervisor Name</label>
+                <input type="text" id="new-event-contact-name" class="form-input" value="${ngo.name || 'Chief Operations Lead'}" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-event-contact-phone">Contact Phone</label>
+                <input type="tel" id="new-event-contact-phone" class="form-input" value="${ngo.mobile || '+91 22 2650 9988'}" />
+              </div>
+            </div>
+
+            <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: flex-end;">
+              <button type="button" class="btn btn-secondary" onclick="window.SahayakApp.closeModal();">Cancel</button>
+              <button type="submit" id="btn-submit-create-event" class="btn btn-primary" style="padding: 10px 22px; font-weight: 800; background: linear-gradient(135deg, #1e40af, #1d4ed8);">
+                🚀 Publish Event &amp; Match Volunteers →
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+  }
+
+  async function submitCreateEvent() {
+    const title = document.getElementById('new-event-title')?.value.trim();
+    const category = document.getElementById('new-event-category')?.value;
+    const urgency = document.getElementById('new-event-urgency')?.value;
+    const location = document.getElementById('new-event-location')?.value.trim();
+    const volunteersRequired = parseInt(document.getElementById('new-event-volunteers')?.value, 10) || 20;
+    const date = document.getElementById('new-event-date')?.value.trim();
+    const shiftTime = document.getElementById('new-event-time')?.value.trim();
+    const description = document.getElementById('new-event-desc')?.value.trim();
+    const contactName = document.getElementById('new-event-contact-name')?.value.trim();
+    const contactPhone = document.getElementById('new-event-contact-phone')?.value.trim();
+
+    const checkedSkills = Array.from(document.querySelectorAll('input[name="event-skills"]:checked')).map(cb => cb.value);
+
+    if (!title || !location || !description) {
+      showToast('Please fill all required event details.', 'danger');
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit-create-event');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Publishing Event Requirement...';
+    }
+
+    const newEventId = `opp-drive-${Date.now()}`;
+    const ngo = state.ngoUser;
+
+    const newOpportunity = {
+      id: newEventId,
+      title: title,
+      organization: ngo.name || "Helping Hands Foundation",
+      orgType: ngo.sector || "Registered Healthcare & Relief NGO",
+      category: category || "Healthcare & Relief",
+      location: location,
+      distanceKm: 3.2,
+      coordinates: { lat: 19.1197, lng: 72.8464 },
+      date: date || "Tomorrow, Oct 7, 2026",
+      shiftTime: shiftTime || "9:00 AM – 1:00 PM",
+      durationHours: 4,
+      volunteersRequired: volunteersRequired,
+      volunteersMatched: Math.min(volunteersRequired, Math.max(2, Math.floor(volunteersRequired * 0.4))),
+      volunteersDeployed: 0,
+      matchScore: 94,
+      isAiRecommended: true,
+      urgency: urgency || "High",
+      status: "OPEN",
+      matchBreakdown: {
+        skills: { score: 95, label: "Core volunteer skills aligned with requirement" },
+        availability: { score: 92, label: "Matches scheduled timing availability" },
+        location: { score: 90, label: "3.2 km distance within operational zone" },
+        experience: { score: 90, label: "Reliability & prior service matched" }
+      },
+      matchExplanation: `High priority volunteer drive organized by ${ngo.name}. Your profile credentials and nearby location make you an optimal match.`,
+      description: description,
+      requiredSkills: checkedSkills.length ? checkedSkills : ["First Aid & CPR", "Crowd Management"],
+      safetyInstructions: [
+        "Wear your Sahayak volunteer badge and high-visibility vest.",
+        "Hydration and medical rest breaks provided.",
+        "Follow on-site safety and coordination protocols."
+      ],
+      emergencyContact: {
+        name: contactName || ngo.name,
+        role: "Event Operations Lead",
+        phone: contactPhone || ngo.mobile || "+91 22 2650 9988"
+      },
+      team: []
+    };
+
+    // Add to opportunities list (volunteer side)
+    state.opportunities.unshift(newOpportunity);
+
+    // Add to ngoEvents (NGO side operations)
+    const newNgoEvent = {
+      id: newEventId,
+      title: title,
+      matchedRatio: `${newOpportunity.volunteersMatched} / ${volunteersRequired}`,
+      matchedCount: newOpportunity.volunteersMatched,
+      requiredCount: volunteersRequired,
+      deployedCount: 0,
+      pendingCount: volunteersRequired - newOpportunity.volunteersMatched,
+      status: "Staffing",
+      location: location.split(',')[0] || location,
+      date: date || "Tomorrow"
+    };
+
+    if (!state.ngoEvents) state.ngoEvents = [];
+    state.ngoEvents.unshift(newNgoEvent);
+
+    try {
+      if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+        await window.SahayakDB.createEvent({
+          title,
+          organization: ngo.name,
+          category,
+          location,
+          volunteersRequired,
+          date,
+          shiftTime,
+          description,
+          requiredSkills: checkedSkills,
+          contactName,
+          contactPhone
+        });
+      }
+    } catch (err) {
+      console.warn('Event database sync notice:', err.message);
+    }
+
+    closeModal();
+    showToast(`🎉 Drive "${title}" published! AI Match engine notified nearby volunteers.`, 'success');
+    renderApp();
   }
 
   /* ========================================================
@@ -5678,6 +5917,8 @@
     openEmergencyBroadcastModal,
     executeEmergencyBroadcast,
     respondToEmergency,
+    openCreateEventModal,
+    submitCreateEvent,
     openAssignVolunteerModal,
     confirmAssignVolunteer,
     handleVolunteerSearch,
