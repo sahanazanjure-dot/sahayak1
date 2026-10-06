@@ -2284,7 +2284,7 @@
           </div>
         </div>
 
-        <!-- 4. OFFICIAL ATTENDANCE PROOF & VERIFICATION HUB (KEY FEATURE) -->
+        <!-- 4. OFFICIAL ATTENDANCE PROOF & CERTIFICATE RELEASE HUB (KEY FEATURE) -->
         <div class="card" style="margin-bottom: 24px; border: 2px solid ${dep.status === 'MATCHED' ? '#f59e0b' : '#10b981'}; background: linear-gradient(to right, #ffffff, #f0fdf4);">
           <div class="card-header" style="margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -2293,21 +2293,21 @@
               </div>
               <div>
                 <h4 style="font-weight: 800; font-size: 1.05rem; color: var(--primary-900); margin: 0;">
-                  Event Attendance Proof &amp; Verification Hub
+                  Attendance Photo Verification &amp; Certificate Release Hub
                 </h4>
                 <p style="font-size: 0.78rem; color: var(--neutral-500); margin: 2px 0 0 0;">
-                  Mandatory on-ground verification: Geotagged photo proof, GPS geofence lock, and supervisor sign-off.
+                  Upload your on-site photo proof below to verify your event attendance. <strong>The official certificate is released only after photo verification.</strong>
                 </p>
               </div>
             </div>
             <span class="badge ${dep.status === 'MATCHED' ? 'badge-danger' : 'badge-success'}" style="font-size: 0.75rem; padding: 5px 12px; font-weight: 800;">
-              ${dep.status === 'MATCHED' ? '⚠️ ATTENDANCE PROOF REQUIRED' : '✓ ATTENDANCE VERIFIED &amp; GEOFENCE LOCKED'}
+              ${dep.status === 'MATCHED' ? '🔒 CERTIFICATE LOCKED (PHOTO REQUIRED)' : '✓ PHOTO VERIFIED • CERTIFICATE RELEASED 🏅'}
             </span>
           </div>
 
           <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; padding: 12px; background: #fff; border-radius: var(--radius-md); border: 1px solid var(--neutral-200); margin-bottom: 12px;">
             <!-- Thumbnail of Photo Proof -->
-            <div style="position: relative; width: 68px; height: 68px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid #10b981; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openPhotoProofViewer();" title="Click to view full photo proof">
+            <div style="position: relative; width: 68px; height: 68px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid ${dep.status === 'MATCHED' ? '#f59e0b' : '#10b981'}; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openServiceCertificate('${dep.eventId}');" title="${dep.status === 'MATCHED' ? 'Upload photo to release certificate' : 'Click to view released certificate'}">
               <img src="${currentPhoto}" alt="Verified Attendance Proof" style="width: 100%; height: 100%; object-fit: cover;" />
               <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: #a7f3d0; font-size: 0.6rem; padding: 1px 4px; border-radius: 2px; font-family: monospace;">GPS ✓</span>
             </div>
@@ -2315,7 +2315,7 @@
             <!-- Proof Details -->
             <div style="font-size: 0.82rem; line-height: 1.45;">
               <div style="font-weight: 800; color: var(--primary-900); margin-bottom: 2px;">
-                ${dep.status === 'MATCHED' ? 'Awaiting On-Site Punch-In Photo' : '✓ On-Ground Attendance Stamped &amp; Validated'}
+                ${dep.status === 'MATCHED' ? '⚠️ Step 1: Upload On-Site Photo Proof (Required to release certificate)' : '✓ Step 2: Attendance Photo Verified &amp; Certificate Released'}
               </div>
               <div style="color: var(--neutral-600); font-size: 0.76rem;">
                 <strong>GPS Coordinates:</strong> 19.1197° N, 72.8464° E (14m inside venue perimeter)
@@ -2330,17 +2330,17 @@
 
             <!-- Action Buttons for Attendance -->
             <div style="display: flex; flex-direction: column; gap: 6px;">
-              <button class="btn btn-sm btn-primary" style="font-size: 0.74rem; padding: 6px 12px; font-weight: 800; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openAttendanceQrPassModal();">
-                📲 Show Event Pass QR
+              <button class="btn btn-sm btn-primary" style="font-size: 0.74rem; padding: 6px 12px; font-weight: 800; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate('${dep.eventId}');">
+                ${dep.status === 'MATCHED' ? '📸 Upload Photo to Release Cert →' : '🏅 View Released Certificate'}
               </button>
               <button class="btn btn-sm btn-secondary" style="font-size: 0.74rem; padding: 5px 10px;" onclick="window.SahayakApp.openLivePhotoClockInModal();">
-                📸 ${dep.status === 'MATCHED' ? 'Capture Attendance Photo' : 'Update Photo Proof'}
+                📸 ${dep.status === 'MATCHED' ? 'Upload Photo Proof' : 'Update Photo Proof'}
               </button>
               <button class="btn btn-sm btn-secondary" style="font-size: 0.74rem; padding: 5px 10px;" onclick="window.SahayakApp.openAttendanceSlipModal();">
                 📄 Attendance Slip
               </button>
-              <button class="btn btn-sm btn-primary" style="font-size: 0.74rem; padding: 5px 10px; background: #047857; border-color: #047857; font-weight: 800;" onclick="window.SahayakApp.markAttendanceVerified('${dep.eventId}');">
-                ✓ Mark Attendance Verified
+              <button class="btn btn-sm btn-primary" style="font-size: 0.74rem; padding: 5px 10px; background: #047857; border-color: #047857; font-weight: 800;" onclick="window.SahayakApp.uploadAttendancePhotoAndReleaseCertificate('${dep.eventId}');">
+                ⚡ Quick Verify &amp; Release
               </button>
             </div>
           </div>
@@ -3395,9 +3395,203 @@
     `);
   }
 
-  function openServiceCertificate() {
+  /* ========================================================
+     CERTIFICATE RELEASE & ON-SITE PHOTO PROOF GATING
+  ======================================================== */
+  function setCertPhotoPreset(presetKey) {
+    selectedPresetPhoto = PHOTO_PRESETS[presetKey] || PHOTO_PRESETS.medical;
+    const img = document.getElementById('cert-upload-preview-img');
+    if (img) img.src = selectedPresetPhoto;
+    document.querySelectorAll('.photo-preset-btn').forEach(b => b.classList.remove('active'));
+    if (presetKey === 'medical') document.getElementById('btn-cert-preset-med')?.classList.add('active');
+    else if (presetKey === 'supply') document.getElementById('btn-cert-preset-sup')?.classList.add('active');
+    else if (presetKey === 'field') document.getElementById('btn-cert-preset-fld')?.classList.add('active');
+  }
+
+  function handleCertPhotoFileUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      selectedPresetPhoto = evt.target.result;
+      const img = document.getElementById('cert-upload-preview-img');
+      if (img) img.src = selectedPresetPhoto;
+      showToast('Custom attendance photo loaded! Click "Upload Photo & Release Certificate" below.', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function uploadAttendancePhotoAndReleaseCertificate(targetEventId) {
+    const targetId = targetEventId || state.activeDeployment.eventId || 'opp-med-01';
+    const opp = state.opportunities.find(o => o.id === targetId) || {
+      id: targetId,
+      title: state.activeDeployment.eventTitle || 'Medical Relief Camp',
+      organization: state.activeDeployment.organization || 'Helping Hands Foundation',
+      location: state.activeDeployment.assignedLocation || 'Community Health Centre, Andheri West'
+    };
+
+    const photo = selectedPresetPhoto || PHOTO_PRESETS.medical;
+
+    state.activeDeployment.eventId = targetId;
+    state.activeDeployment.eventTitle = opp.title;
+    state.activeDeployment.organization = opp.organization;
+    state.activeDeployment.assignedLocation = opp.location;
+    state.activeDeployment.status = 'COMPLETED';
+    state.activeDeployment.attendanceVerified = true;
+    state.activeDeployment.checkInPhoto = photo;
+    state.activeDeployment.checkInTime = state.activeDeployment.checkInTime || '04:02 PM';
+    state.activeDeployment.checkOutTime = state.activeDeployment.checkOutTime || '08:05 PM';
+
+    if (!state.currentUser.attendedEvents) {
+      state.currentUser.attendedEvents = [];
+    }
+
+    const existingIdx = state.currentUser.attendedEvents.findIndex(a => a.eventId === targetId);
+    const newRecord = {
+      id: `att-${Date.now()}`,
+      eventId: targetId,
+      title: opp.title,
+      organization: opp.organization,
+      location: opp.location,
+      date: "Today, Oct 5, 2026",
+      hours: 4.0,
+      supervisor: "Dr. S. Mehta (Chief Medical Officer)",
+      verifiedStatus: "VERIFIED_ON_SITE",
+      photoProof: photo,
+      gpsLocation: "19.1197° N, 72.8464° E (14m perimeter)",
+      certificateToken: `SHK-CERT-${targetId.toUpperCase()}-8492`,
+      rating: 5.0,
+      attendedTimestamp: new Date().toISOString()
+    };
+
+    if (existingIdx >= 0) {
+      state.currentUser.attendedEvents[existingIdx] = newRecord;
+    } else {
+      state.currentUser.attendedEvents.unshift(newRecord);
+      state.currentUser.completedEvents = (state.currentUser.completedEvents || 24) + 1;
+      state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 142) + 4;
+    }
+
+    if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+      window.SahayakDB.saveDeployment(state.activeDeployment);
+      window.SahayakDB.saveVolunteer(state.currentUser);
+    }
+
+    renderApp();
+    showToast(`🎉 Attendance verified with photo proof! Your Official Certificate has been released!`, 'success');
+
+    // Immediately open released certificate
+    setTimeout(() => {
+      openServiceCertificate(targetId);
+    }, 250);
+  }
+
+  function openServiceCertificate(targetEventId) {
+    const dep = state.activeDeployment;
+    const targetId = targetEventId || dep.eventId || 'opp-med-01';
+    
+    // Find attended record or opportunity
+    const attendedRec = (state.currentUser.attendedEvents || []).find(a => a.eventId === targetId);
+    const opp = state.opportunities.find(o => o.id === targetId) || {
+      id: targetId,
+      title: dep.eventTitle || 'Medical Relief Camp',
+      organization: dep.organization || 'Helping Hands Foundation',
+      location: dep.assignedLocation || 'Community Health Centre, Andheri West'
+    };
+
+    const isCurrentActive = dep.eventId === targetId;
+    const hasActivePhoto = isCurrentActive && dep.checkInPhoto && (dep.attendanceVerified || dep.status === 'COMPLETED' || dep.status === 'DEPLOYED');
+    const isVerified = Boolean(attendedRec?.photoProof || hasActivePhoto);
+    const photoUrl = attendedRec?.photoProof || (isCurrentActive ? dep.checkInPhoto : null) || selectedPresetPhoto || PHOTO_PRESETS.medical;
+
+    if (!isVerified) {
+      // 🔒 LOCKED CERTIFICATE MODAL: Photo Upload Required to Release Certificate
+      openModal(`
+        <div class="modal-window" style="max-width: 560px; text-align: center; border: 3px solid #f59e0b; box-shadow: 0 20px 40px rgba(245, 158, 11, 0.25);">
+          <div class="modal-header" style="background: linear-gradient(135deg, #78350f, #b45309); color: #fff;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">🔒</span>
+              <span style="font-weight: 800; font-size: 1.05rem;">Certificate Locked — Attendance Photo Required</span>
+            </div>
+            <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
+          </div>
+
+          <div class="modal-body" style="padding: 24px; background: #fffbeb;">
+            <div style="width: 64px; height: 64px; background: #fef3c7; border: 2px dashed #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 12px auto;">
+              📸
+            </div>
+
+            <span class="badge badge-warning" style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-weight: 800; font-size: 0.78rem; padding: 4px 12px; margin-bottom: 10px; display: inline-block;">
+              ⚠️ ATTENDANCE PHOTO REQUIRED
+            </span>
+
+            <h3 style="font-size: 1.25rem; font-weight: 900; color: #78350f; margin-bottom: 6px;">
+              Upload Photo Proof to Release Certificate
+            </h3>
+
+            <p style="font-size: 0.84rem; color: #92400e; margin-bottom: 16px; line-height: 1.5;">
+              To release your official volunteer certificate for <strong>${opp.title}</strong>, simply upload an on-site photo proof or venue selfie confirming that you attended the event.
+            </p>
+
+            <!-- PHOTO VIEWFINDER PREVIEW -->
+            <div class="photo-viewfinder-wrap" id="cert-locked-preview-wrap" style="height: 170px; margin-bottom: 12px; border: 2px solid #f59e0b; border-radius: var(--radius-md); overflow: hidden; position: relative;">
+              <div class="photo-viewfinder-scanline"></div>
+              <img id="cert-upload-preview-img" src="${selectedPresetPhoto || PHOTO_PRESETS.medical}" alt="Attendance Photo Preview" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div class="photo-viewfinder-hud">
+                <span>📍 LIVE GEOTAG: ANDHERI WEST HUB</span>
+                <span>⏱️ ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+
+            <!-- PRESET BUTTONS & FILE INPUT -->
+            <div style="margin-bottom: 16px;">
+              <div style="font-size: 0.76rem; font-weight: 700; color: #78350f; margin-bottom: 6px; text-align: left;">
+                Select or Upload On-Site Proof Photo:
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                <button type="button" class="photo-preset-btn active" id="btn-cert-preset-med" style="padding: 6px 8px; font-size: 0.75rem;" onclick="window.SahayakApp.setCertPhotoPreset('medical');">
+                  🏥 Triage Booth
+                </button>
+                <button type="button" class="photo-preset-btn" id="btn-cert-preset-sup" style="padding: 6px 8px; font-size: 0.75rem;" onclick="window.SahayakApp.setCertPhotoPreset('supply');">
+                  📦 Supply Desk
+                </button>
+                <button type="button" class="photo-preset-btn" id="btn-cert-preset-fld" style="padding: 6px 8px; font-size: 0.75rem;" onclick="window.SahayakApp.setCertPhotoPreset('field');">
+                  🎒 Mobile Squad
+                </button>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <input type="file" id="cert-custom-photo-file" accept="image/*" style="display: none;" onchange="window.SahayakApp.handleCertPhotoFileUpload(event);" />
+                <button type="button" class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.76rem; background: #fff;" onclick="document.getElementById('cert-custom-photo-file').click();">
+                  📁 Upload Photo from Device
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.76rem; background: #fff;" onclick="window.SahayakApp.triggerCameraSnapshot();">
+                  📸 Take Live Snapshot
+                </button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.closeModal();">Cancel</button>
+              <button type="button" class="btn btn-primary" style="flex: 2; background: linear-gradient(135deg, #059669, #047857); border: none; font-weight: 800; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);" onclick="window.SahayakApp.uploadAttendancePhotoAndReleaseCertificate('${targetId}');">
+                ⚡ Upload Photo &amp; Release Certificate →
+              </button>
+            </div>
+          </div>
+        </div>
+      `);
+      return;
+    }
+
+    // 🏅 UNLOCKED CERTIFICATE MODAL (OFFICIAL CERTIFICATE WITH EMBEDDED ATTENDANCE PHOTO)
+    const certToken = attendedRec?.certificateToken || `SHK-CERT-${targetId.toUpperCase()}-8492`;
+    const eventTitle = attendedRec?.title || opp.title || 'Medical Relief Camp';
+    const orgName = attendedRec?.organization || opp.organization || 'Helping Hands Foundation';
+    const hoursCount = attendedRec?.hours || dep.shiftHours || 4.0;
+    const supervisorName = attendedRec?.supervisor || 'Dr. S. Mehta (Chief Medical Officer)';
+
     openModal(`
-      <div class="modal-window" style="max-width: 580px; text-align: center; border: 4px solid var(--primary-800);">
+      <div class="modal-window" style="max-width: 620px; text-align: center; border: 4px solid #0f3d87; box-shadow: 0 25px 50px -12px rgba(15, 61, 135, 0.35);">
         <div class="modal-header" style="background: linear-gradient(135deg, #0a1f44, #0f3d87); color: #fff; border-bottom: 2px solid #d97706;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
@@ -3406,41 +3600,74 @@
           <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
         </div>
 
-        <div class="modal-body" style="padding: 28px; background: #fafafa;">
-          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary-700); letter-spacing: 0.1em; margin-bottom: 4px;">
-            National Disaster &amp; Community Response Network
+        <div class="modal-body" style="padding: 24px; background: #fafafa;">
+          <!-- GOLD SEAL -->
+          <div class="certificate-gold-seal">
+            <span style="font-size: 1.75rem;">🏅</span>
           </div>
-          <h2 style="font-size: 1.6rem; font-weight: 900; color: var(--primary-900); margin-bottom: 12px; font-family: 'Plus Jakarta Sans', serif;">
+
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--primary-700); letter-spacing: 0.12em; margin-bottom: 2px;">
+            Sahayak National Disaster &amp; Community Response Network
+          </div>
+          <h2 style="font-size: 1.55rem; font-weight: 900; color: var(--primary-900); margin-bottom: 10px; font-family: 'Plus Jakarta Sans', serif;">
             CERTIFICATE OF EXCELLENCE
           </h2>
-          
-          <p style="font-size: 0.88rem; color: var(--neutral-600); margin-bottom: 18px;">
-            This certifies that <strong>${state.currentUser.name}</strong> has successfully completed on-ground emergency deployment for:
+
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px;">
+            ✓ PHOTO ATTENDANCE VERIFIED ON-SITE • CRYPTOGRAPHICALLY SEALED
+          </div>
+
+          <p style="font-size: 0.86rem; color: var(--neutral-600); margin-bottom: 14px;">
+            This certifies that <strong>${state.currentUser.name}</strong> has verified physical attendance and successfully completed on-ground emergency deployment for:
           </p>
 
-          <div style="padding: 14px; background: #fff; border: 1px dashed var(--primary-500); border-radius: var(--radius-md); margin-bottom: 20px;">
-            <div style="font-weight: 800; font-size: 1.15rem; color: var(--primary-900);">${state.activeDeployment.eventTitle}</div>
-            <div style="font-size: 0.82rem; color: var(--neutral-500); margin-top: 4px;">4.0 Hours Verified Service • Helping Hands Foundation</div>
-            <div style="font-size: 0.74rem; color: var(--success-600); font-weight: 700; margin-top: 2px;">📸 Photo Proof &amp; Live Telemetry Watermarked</div>
+          <div style="padding: 12px; background: #fff; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); margin-bottom: 14px;">
+            <div style="font-weight: 800; font-size: 1.12rem; color: var(--primary-900);">${eventTitle}</div>
+            <div style="font-size: 0.8rem; color: var(--neutral-600); margin-top: 2px;">
+              ${hoursCount}.0 Hours Verified Service • <strong>${orgName}</strong>
+            </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 14px; border-top: 1px solid var(--neutral-200); text-align: left; font-size: 0.78rem;">
+          <!-- EMBEDDED PHOTO PROOF & TELEMETRY ON CERTIFICATE -->
+          <div style="display: flex; gap: 12px; align-items: center; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; text-align: left;">
+            <div style="position: relative; width: 62px; height: 62px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid #10b981; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openPhotoProofViewer();" title="Click to view high-res photo proof">
+              <img src="${photoUrl}" alt="Verified Attendance Photo" style="width: 100%; height: 100%; object-fit: cover;" />
+              <span style="position: absolute; bottom: 1px; right: 1px; background: rgba(0,0,0,0.75); color: #6ee7b7; font-size: 0.55rem; padding: 1px 3px; font-family: monospace;">GPS ✓</span>
+            </div>
+            <div style="font-size: 0.76rem; line-height: 1.45; color: #166534;">
+              <div style="font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 4px;">
+                📸 Verified On-Site Attendance Photo Proof
+              </div>
+              <div><strong>Geotag:</strong> 19.1197° N, 72.8464° E (14m within perimeter)</div>
+              <div><strong>Supervisor Sign-Off:</strong> ${supervisorName}</div>
+            </div>
+          </div>
+
+          <!-- CERTIFICATE FOOTER WITH SIGNATURE & TOKEN -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 12px; border-top: 1px solid var(--neutral-200); text-align: left; font-size: 0.76rem;">
             <div>
-              <div style="font-weight: 800; color: var(--neutral-800);">Dr. S. Mehta</div>
-              <div style="color: var(--neutral-500);">Chief Medical Officer, IRCS Lead</div>
-              <div style="font-family: monospace; color: var(--primary-700); margin-top: 2px;">CERT-ID: #SHK-2026-MED-8492</div>
+              <div style="font-weight: 800; color: var(--neutral-800);">${supervisorName}</div>
+              <div style="color: var(--neutral-500); font-size: 0.72rem;">Authorized NGO Lead &amp; Medical Officer</div>
+              <div style="font-family: monospace; color: var(--primary-700); font-weight: 700; margin-top: 2px;">${certToken}</div>
             </div>
             <div style="text-align: right;">
-              <span class="badge badge-success" style="padding: 4px 8px;">✓ Cryptographically Sealed</span>
+              <span class="badge badge-success" style="padding: 4px 8px; font-size: 0.72rem;">✓ Official Seal Active</span>
             </div>
           </div>
 
-          <div style="margin-top: 20px; display: flex; gap: 10px;">
-            <button class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.showToast('Official PDF certificate downloaded with QR verification seal.', 'success');">
+          <!-- ACTION BUTTONS -->
+          <div style="margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-secondary" style="flex: 1; font-size: 0.78rem;" onclick="window.SahayakApp.showToast('Official PDF certificate downloaded with QR verification seal.', 'success');">
               ⬇ Download PDF
             </button>
-            <button class="btn btn-primary" style="flex: 1;" onclick="window.SahayakApp.closeModal(); window.SahayakApp.navigateTo('profile');">
-              View Updated Profile →
+            <button class="btn btn-secondary" style="flex: 1; font-size: 0.78rem;" onclick="window.print();">
+              🖨️ Print Certificate
+            </button>
+            <button class="btn btn-secondary" style="flex: 1; font-size: 0.78rem;" onclick="window.SahayakApp.openLivePhotoClockInModal();">
+              📸 Update Photo
+            </button>
+            <button class="btn btn-primary" style="flex: 1; font-size: 0.78rem; background: #0a1f44;" onclick="window.SahayakApp.closeModal(); window.SahayakApp.navigateTo('profile');">
+              View Profile →
             </button>
           </div>
         </div>
@@ -5121,6 +5348,9 @@
     triggerCameraSnapshot,
     confirmPhotoClockIn,
     markAttendanceVerified,
+    setCertPhotoPreset,
+    handleCertPhotoFileUpload,
+    uploadAttendancePhotoAndReleaseCertificate,
     openConcludeShiftModal,
     setShiftRating,
     confirmConcludeShift,
