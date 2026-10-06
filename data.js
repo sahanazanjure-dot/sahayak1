@@ -32,7 +32,57 @@ const INITIAL_DATA = {
     totalVolunteerHours: 142,
     supervisorRating: 4.9,
     onTimeRate: "99.2%",
-    maxTravelRadiusKm: 12
+    maxTravelRadiusKm: 12,
+    attendedEvents: [
+      {
+        id: "att-01",
+        eventId: "opp-med-01",
+        title: "Medical Relief Camp",
+        organization: "Helping Hands Foundation",
+        location: "Community Health Centre, Andheri West, Mumbai",
+        date: "Today, Oct 5, 2026",
+        hours: 4.0,
+        supervisor: "Dr. S. Mehta (Chief Medical Officer)",
+        verifiedStatus: "VERIFIED_ON_SITE",
+        photoProof: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60",
+        gpsLocation: "19.1197° N, 72.8464° E (14m within perimeter)",
+        certificateToken: "SHK-CERT-MED-8492",
+        rating: 5.0,
+        attendedTimestamp: "2026-10-05T16:02:00Z"
+      },
+      {
+        id: "att-02",
+        eventId: "opp-flood-prev",
+        title: "Flood Relief & Emergency Supply",
+        organization: "Seva Bharat Relief",
+        location: "Kurla Relief Base Camp, Mumbai",
+        date: "Oct 2, 2026",
+        hours: 6.0,
+        supervisor: "R. K. Iyer (Disaster Operations Lead)",
+        verifiedStatus: "VERIFIED_ON_SITE",
+        photoProof: "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=500&auto=format&fit=crop&q=60",
+        gpsLocation: "19.0728° N, 72.8797° E",
+        certificateToken: "SHK-CERT-FLD-9982",
+        rating: 5.0,
+        attendedTimestamp: "2026-10-02T09:00:00Z"
+      },
+      {
+        id: "att-03",
+        eventId: "opp-blood-prev",
+        title: "Mega Health & Blood Donation Drive",
+        organization: "Red Cross Mumbai",
+        location: "Bandra Civic Ground, Mumbai",
+        date: "Sep 28, 2026",
+        hours: 5.0,
+        supervisor: "Dr. A. Kulkarni (Medical Director)",
+        verifiedStatus: "VERIFIED_ON_SITE",
+        photoProof: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=500&auto=format&fit=crop&q=60",
+        gpsLocation: "19.0596° N, 72.8295° E",
+        certificateToken: "SHK-CERT-BLD-7412",
+        rating: 5.0,
+        attendedTimestamp: "2026-09-28T10:15:00Z"
+      }
+    ]
   },
 
   ngoUser: {

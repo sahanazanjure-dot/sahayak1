@@ -962,6 +962,62 @@
             </div>
           </div>
 
+          <!-- 3B. VERIFIED ATTENDED EVENTS & ATTENDANCE PROOFS -->
+          <div class="card" style="border: 1.5px solid #10b981; background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);">
+            <div class="card-header" style="margin-bottom: 12px;">
+              <div>
+                <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; color: #065f46; font-size: 1.05rem;">
+                  <span>🛡️</span>
+                  Attended Events &amp; Service Proof
+                </h3>
+                <div style="font-size: 0.76rem; color: #047857; margin-top: 2px;">
+                  Official record of on-ground verified shifts &amp; attended events
+                </div>
+              </div>
+              <span class="badge badge-success" style="font-size: 0.72rem; font-weight: 800;">
+                ✓ ${(user.attendedEvents || []).length} Attended
+              </span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+              ${(user.attendedEvents || []).slice(0, 3).map(att => `
+                <div style="padding: 12px; background: #ffffff; border-radius: var(--radius-md); border: 1px solid #a7f3d0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                    <span class="badge badge-success" style="font-size: 0.68rem; font-weight: 800;">
+                      ✓ ATTENDED &amp; VERIFIED
+                    </span>
+                    <span style="font-size: 0.72rem; color: var(--neutral-500); font-weight: 700;">${att.date}</span>
+                  </div>
+
+                  <h4 style="font-weight: 800; font-size: 0.92rem; color: var(--primary-900); margin: 4px 0 2px 0;">
+                    ${att.title}
+                  </h4>
+
+                  <div style="font-size: 0.76rem; color: var(--neutral-600); margin-bottom: 2px;">
+                    🏢 ${att.organization} • <strong>${att.hours}.0 Hours Credited</strong>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #059669; font-weight: 600; margin-bottom: 8px;">
+                    <span>👨‍⚕️ Supervisor: ${att.supervisor}</span>
+                  </div>
+
+                  <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px;" onclick="window.SahayakApp.openAttendanceSlipModal();">
+                      📄 Attendance Slip
+                    </button>
+                    <button class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.72rem; padding: 4px 6px; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate();">
+                      🏅 Certificate
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <button class="btn btn-secondary btn-block" style="font-size: 0.8rem;" onclick="window.SahayakApp.navigateTo('profile');">
+              View Complete Attendance Record &amp; Badges →
+            </button>
+          </div>
+
           <!-- 4. RELIABILITY SCORE WIDGET -->
           <div class="card">
             <div class="card-header">
@@ -1277,6 +1333,78 @@
             No scheduled tasks currently. Accept an opportunity from the Smart Match or Opportunities directory.
           </div>
         `}
+      <!-- 4. VERIFIED ATTENDED EVENTS & ON-GROUND PROOF REGISTRY -->
+      <div class="card" style="margin-top: 24px; border: 2px solid #10b981;">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; color: #065f46;">
+              <span style="font-size: 1.2rem;">🛡️</span>
+              Verified Event Attendance &amp; Proof Registry
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--neutral-500); margin-top: 2px;">
+              Permanent on-ground telemetry logs, geotagged proof photos, supervisor endorsements, and credential stamps.
+            </p>
+          </div>
+          <span class="badge badge-success" style="font-weight: 800; font-size: 0.76rem;">
+            ✓ 100% On-Site Verified
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+          ${(user.attendedEvents || []).map(att => `
+            <div style="padding: 16px; background: #ffffff; border: 1.5px solid #a7f3d0; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <span class="badge badge-success" style="font-size: 0.7rem; font-weight: 800;">
+                  ✓ ATTENDED &amp; ON-SITE VERIFIED
+                </span>
+                <span style="font-size: 0.74rem; color: var(--neutral-500); font-weight: 700;">${att.date}</span>
+              </div>
+
+              <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div style="position: relative; width: 64px; height: 64px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid #10b981; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openPhotoProofViewer();" title="Click to view full on-site proof photo">
+                  <img src="${att.photoProof}" alt="${att.title} Proof" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <span style="position: absolute; bottom: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #6ee7b7; font-size: 0.55rem; padding: 1px 3px; font-family: monospace;">GPS</span>
+                </div>
+
+                <div style="flex: 1;">
+                  <h4 style="font-weight: 800; font-size: 0.98rem; color: var(--primary-900); margin: 0 0 4px 0;">
+                    ${att.title}
+                  </h4>
+                  <div style="font-size: 0.78rem; color: var(--neutral-600); margin-bottom: 2px;">
+                    🏢 <strong>${att.organization}</strong>
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--neutral-500);">
+                    📍 ${att.location}
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding: 8px 10px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; font-size: 0.74rem; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                  <span style="color: var(--neutral-500);">Supervisor Sign-Off:</span>
+                  <strong style="color: #065f46;">${att.supervisor}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                  <span style="color: var(--neutral-500);">Geotag Perimeter:</span>
+                  <strong style="font-family: monospace; font-size: 0.7rem;">${att.gpsLocation || '19.1197° N, 72.8464° E'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--neutral-500);">Credited Service:</span>
+                  <strong style="color: var(--primary-800);">${att.hours}.0 Verified Hours</strong>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: auto;">
+                <button class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.74rem;" onclick="window.SahayakApp.openAttendanceSlipModal();">
+                  📄 Attendance Slip
+                </button>
+                <button class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.74rem; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openServiceCertificate();">
+                  🏅 View Certificate
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `;
   }
@@ -1299,8 +1427,9 @@
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
         ${state.opportunities.map(opp => {
           const isScheduled = (state.scheduledTasks || []).some(t => t.id === opp.id || t.eventId === opp.id);
+          const isAttended = (state.currentUser.attendedEvents || []).some(a => a.eventId === opp.id) || (state.activeDeployment.eventId === opp.id && (state.activeDeployment.status === 'COMPLETED' || state.activeDeployment.attendanceVerified));
           return `
-          <div class="opportunity-card ${opp.isAiRecommended ? 'featured' : ''}" style="${isScheduled ? 'border-top: 4px solid #10b981;' : ''}">
+          <div class="opportunity-card ${opp.isAiRecommended ? 'featured' : ''}" style="${isAttended ? 'border: 2px solid #10b981; background: linear-gradient(180deg, #fff 0%, #f0fdf4 100%);' : isScheduled ? 'border-top: 4px solid #10b981;' : ''}">
             <div class="opp-card-top">
               <div>
                 <div class="opp-org-info">
@@ -1314,7 +1443,11 @@
                 <div class="opp-match-badge">
                   ${opp.matchScore}% Match
                 </div>
-                ${isScheduled ? `<span class="badge badge-success" style="font-size: 0.68rem;">✓ In Scheduled Tasks</span>` : ''}
+                ${isAttended ? `
+                  <span class="badge badge-success" style="font-size: 0.68rem; font-weight: 800;">✓ ATTENDED &amp; VERIFIED</span>
+                ` : isScheduled ? `
+                  <span class="badge badge-primary" style="font-size: 0.68rem;">✓ In Scheduled Tasks</span>
+                ` : ''}
               </div>
             </div>
 
@@ -1342,9 +1475,13 @@
               <button class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${opp.id}' });">
                 View Details
               </button>
-              ${isScheduled ? `
+              ${isAttended ? `
                 <button class="btn btn-primary" style="flex: 1; background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
-                  🚀 Open Scheduled Task →
+                  🛡️ View Attendance Proof →
+                </button>
+              ` : isScheduled ? `
+                <button class="btn btn-primary" style="flex: 1; background: #1e40af; border-color: #1e40af; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
+                  🚀 Open Deployment →
                 </button>
               ` : `
                 <button class="btn btn-primary" style="flex: 1; font-weight: 800;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
@@ -2116,6 +2253,9 @@
               <button class="btn btn-sm btn-secondary" style="font-size: 0.74rem; padding: 5px 10px;" onclick="window.SahayakApp.openAttendanceSlipModal();">
                 📄 Attendance Slip
               </button>
+              <button class="btn btn-sm btn-primary" style="font-size: 0.74rem; padding: 5px 10px; background: #047857; border-color: #047857; font-weight: 800;" onclick="window.SahayakApp.markAttendanceVerified('${dep.eventId}');">
+                ✓ Mark Attendance Verified
+              </button>
             </div>
           </div>
         </div>
@@ -2553,18 +2693,88 @@
   }
 
   function startScheduledTask(taskId) {
-    const task = (state.scheduledTasks || []).find(t => t.id === taskId || t.eventId === taskId);
+    let task = null;
+    if (taskId) {
+      task = (state.scheduledTasks || []).find(t => t.id === taskId || t.eventId === taskId);
+      if (!task) {
+        task = (state.opportunities || []).find(o => o.id === taskId);
+      }
+    }
+    if (!task && state.scheduledTasks && state.scheduledTasks.length > 0) {
+      task = state.scheduledTasks[0];
+    }
+    if (!task && state.opportunities && state.opportunities.length > 0) {
+      task = state.opportunities[0];
+    }
+
     if (task) {
       state.activeDeployment.status = task.status || 'MATCHED';
       state.activeDeployment.eventId = task.eventId || task.id;
       state.activeDeployment.eventTitle = task.title;
       state.activeDeployment.organization = task.organization;
-      state.activeDeployment.assignedLocation = task.location;
-      state.activeDeployment.shiftTime = task.shiftTime;
-      state.activeDeployment.shiftHours = task.hours || 4;
-      state.activeDeployment.qrCodeToken = `SHK-2026-${(task.eventId || task.id).toUpperCase()}-SECTOR`;
+      state.activeDeployment.assignedLocation = task.location || task.assignedLocation || 'Community Health Centre, Andheri West';
+      state.activeDeployment.shiftTime = task.shiftTime || '4:00 PM – 8:00 PM';
+      state.activeDeployment.shiftHours = task.hours || task.shiftHours || 4;
+      state.activeDeployment.qrCodeToken = `SHK-2026-${(task.eventId || task.id || 'GEN').toUpperCase()}-SECTOR`;
     }
+
     navigateTo('deployments');
+  }
+
+  function markAttendanceVerified(eventId) {
+    const opp = (state.opportunities || []).find(o => o.id === eventId) || state.opportunities[0];
+    const targetEventId = opp ? opp.id : (eventId || 'opp-med-01');
+    const targetTitle = opp ? opp.title : 'Medical Relief Camp';
+    const targetOrg = opp ? opp.organization : 'Helping Hands Foundation';
+    const targetLoc = opp ? opp.location : 'Community Health Centre, Andheri West';
+
+    state.activeDeployment.status = 'COMPLETED';
+    state.activeDeployment.eventId = targetEventId;
+    state.activeDeployment.eventTitle = targetTitle;
+    state.activeDeployment.organization = targetOrg;
+    state.activeDeployment.assignedLocation = targetLoc;
+    state.activeDeployment.attendanceVerified = true;
+    state.activeDeployment.checkInTime = state.activeDeployment.checkInTime || '04:02 PM';
+    state.activeDeployment.checkOutTime = state.activeDeployment.checkOutTime || '08:05 PM';
+    state.activeDeployment.checkInPhoto = state.activeDeployment.checkInPhoto || PHOTO_PRESETS.medical;
+
+    if (!state.currentUser.attendedEvents) {
+      state.currentUser.attendedEvents = [];
+    }
+
+    const existingIdx = state.currentUser.attendedEvents.findIndex(a => a.eventId === targetEventId);
+    const newRecord = {
+      id: `att-${Date.now()}`,
+      eventId: targetEventId,
+      title: targetTitle,
+      organization: targetOrg,
+      location: targetLoc,
+      date: "Today, Oct 5, 2026",
+      hours: 4.0,
+      supervisor: "Dr. S. Mehta (Chief Medical Officer)",
+      verifiedStatus: "VERIFIED_ON_SITE",
+      photoProof: state.activeDeployment.checkInPhoto || PHOTO_PRESETS.medical,
+      gpsLocation: "19.1197° N, 72.8464° E (14m perimeter)",
+      certificateToken: `SHK-CERT-${targetEventId.toUpperCase()}`,
+      rating: 5.0,
+      attendedTimestamp: new Date().toISOString()
+    };
+
+    if (existingIdx >= 0) {
+      state.currentUser.attendedEvents[existingIdx] = newRecord;
+    } else {
+      state.currentUser.attendedEvents.unshift(newRecord);
+      state.currentUser.completedEvents = (state.currentUser.completedEvents || 24) + 1;
+      state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 142) + 4;
+    }
+
+    if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+      window.SahayakDB.saveDeployment(state.activeDeployment);
+      window.SahayakDB.saveVolunteer(state.currentUser);
+    }
+
+    renderApp();
+    showToast(`✓ Attendance officially verified for "${targetTitle}"! Credited 4.0 service hours.`, 'success');
   }
 
   /* ========================================================
@@ -4820,6 +5030,7 @@
     handlePhotoFileUpload,
     triggerCameraSnapshot,
     confirmPhotoClockIn,
+    markAttendanceVerified,
     openConcludeShiftModal,
     setShiftRating,
     confirmConcludeShift,
