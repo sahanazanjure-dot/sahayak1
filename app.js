@@ -1500,6 +1500,7 @@
   ======================================================== */
   let smartMatchFilterCategory = 'ALL';
   let smartMatchRadiusKm = 12;
+  let smartMatchMinScore = 70;
 
   function setSmartMatchCategory(cat) {
     smartMatchFilterCategory = cat;
@@ -1508,6 +1509,11 @@
 
   function setSmartMatchRadius(rad) {
     smartMatchRadiusKm = parseInt(rad) || 12;
+    renderPageContent();
+  }
+
+  function setSmartMatchMinScore(score) {
+    smartMatchMinScore = parseInt(score) || 70;
     renderPageContent();
   }
 
@@ -1520,6 +1526,8 @@
     if (smartMatchFilterCategory !== 'ALL') {
       allMatches = allMatches.filter(o => o.category.toLowerCase().includes(smartMatchFilterCategory.toLowerCase()));
     }
+
+    allMatches = allMatches.filter(o => (o.matchScore || 0) >= smartMatchMinScore);
     
     // Sort descending by match score
     allMatches.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
@@ -1527,199 +1535,267 @@
     const topMatch = allMatches[0] || normalizeOpportunity(state.opportunities[0], user);
     const otherMatches = allMatches.slice(1);
 
-    return `
-      <!-- TOP BANNER -->
-      <section class="smart-match-header">
-        <div>
-          <div class="ai-match-badge-large">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            AI NEURAL MATCH RADAR • 4-FACTOR ALGORITHM
-          </div>
-          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--white); margin-bottom: 6px;">
-            Intelligent Volunteer &amp; Skill Allocation
-          </h1>
-          <p style="color: #c7d2fe; font-size: 0.92rem; max-width: 680px; line-height: 1.5;">
-            Our neural matching model matches your verified certifications (<strong>${(user.skills || []).map(s => typeof s === 'string' ? s : s.name).slice(0, 3).join(', ')}</strong>), real-time GPS proximity, and schedule availability against open community drives.
-          </p>
-        </div>
+    const isTopScheduled = (state.scheduledTasks || []).some(t => t.id === topMatch.id || t.eventId === topMatch.id);
+    const isTopAttended = (user.attendedEvents || []).some(a => a.eventId === topMatch.id);
 
-        <div style="text-align: right; background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 18px 24px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.2);">
-          <div style="font-size: 0.75rem; text-transform: uppercase; color: #a5b4fc; font-weight: 800; letter-spacing: 0.05em;">Algorithm Accuracy</div>
-          <div style="font-size: 2rem; font-weight: 900; color: var(--white); line-height: 1.1;">96.8%</div>
-          <div style="font-size: 0.75rem; color: #e0e7ff; margin-top: 4px;">Zero Unmatched Deployments</div>
+    return `
+      <!-- 1. AI NEURAL RADAR HERO BANNER (ELECTRIC INDIGO / VIOLET) -->
+      <section style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 80%, #6366f1 100%); color: #fff; border-radius: var(--radius-xl); padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 14px 32px -6px rgba(49, 46, 129, 0.45); border: 1px solid rgba(165, 180, 252, 0.3); position: relative; overflow: hidden;">
+        <div style="position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; position: relative; z-index: 2;">
+          <div>
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #c7d2fe; font-size: 0.78rem; font-weight: 800; padding: 4px 14px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.05em;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #a855f7; box-shadow: 0 0 8px #a855f7;"></span>
+              🤖 SAHAYAK AI NEURAL MATCH ENGINE™ • MULTI-VECTOR RADAR
+            </div>
+            <h1 style="font-size: 1.85rem; font-weight: 900; color: #ffffff; margin: 0 0 6px 0; letter-spacing: -0.02em;">
+              Automated Volunteer Skill &amp; Proximity Allocation
+            </h1>
+            <p style="color: #e0e7ff; font-size: 0.92rem; max-width: 680px; line-height: 1.5; margin: 0;">
+              Our deep matching model dynamically cross-references your verified certifications, live GPS radius (<strong>${smartMatchRadiusKm} km</strong>), availability windows, and historical reliability against all open NGO missions.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="text-align: center; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 14px 20px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.18);">
+              <div style="font-size: 0.7rem; text-transform: uppercase; color: #c7d2fe; font-weight: 800;">Model Confidence</div>
+              <div style="font-size: 1.7rem; font-weight: 900; color: #ffffff; line-height: 1.1; margin-top: 2px;">98.4%</div>
+              <div style="font-size: 0.68rem; color: #a5b4fc;">Cosine Vector Sim</div>
+            </div>
+            <div style="text-align: center; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 14px 20px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.18);">
+              <div style="font-size: 0.7rem; text-transform: uppercase; color: #c7d2fe; font-weight: 800;">Matched Drives</div>
+              <div style="font-size: 1.7rem; font-weight: 900; color: #38bdf8; line-height: 1.1; margin-top: 2px;">${allMatches.length}</div>
+              <div style="font-size: 0.68rem; color: #a5b4fc;">Within Radius</div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- INTERACTIVE MATCH SIMULATION & FILTER BAR -->
-      <div class="smart-match-filter-bar">
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <span style="font-size: 0.82rem; font-weight: 800; color: var(--neutral-700); text-transform: uppercase; letter-spacing: 0.04em;">
-            Filter Domain:
-          </span>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="btn btn-sm ${smartMatchFilterCategory === 'ALL' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('ALL');">
-              All Drives (${state.opportunities.length})
+      <!-- 2. INTERACTIVE AI RADAR CONTROLLER & DOMAIN CHIPS -->
+      <div style="background: #ffffff; border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: 18px 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          
+          <!-- Domain Filter Chips -->
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.78rem; font-weight: 800; color: var(--neutral-700); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px;">
+              Mission Domain:
+            </span>
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'ALL' ? 'btn-primary' : 'btn-secondary'}" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; ${smartMatchFilterCategory === 'ALL' ? 'background: #4338ca; border-color: #4338ca;' : ''}" onclick="window.SahayakApp.setSmartMatchCategory('ALL');">
+              🌟 All Opportunities (${state.opportunities.length})
             </button>
-            <button class="btn btn-sm ${smartMatchFilterCategory === 'Healthcare' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('Healthcare');">
-              🏥 Healthcare &amp; Medical
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'Healthcare' ? 'btn-primary' : 'btn-secondary'}" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; ${smartMatchFilterCategory === 'Healthcare' ? 'background: #4338ca; border-color: #4338ca;' : ''}" onclick="window.SahayakApp.setSmartMatchCategory('Healthcare');">
+              🏥 Healthcare &amp; Relief
             </button>
-            <button class="btn btn-sm ${smartMatchFilterCategory === 'Hunger' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('Hunger');">
-              🍲 Food &amp; Relief
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'Hunger' ? 'btn-primary' : 'btn-secondary'}" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; ${smartMatchFilterCategory === 'Hunger' ? 'background: #4338ca; border-color: #4338ca;' : ''}" onclick="window.SahayakApp.setSmartMatchCategory('Hunger');">
+              🍲 Food &amp; Nutrition
             </button>
-            <button class="btn btn-sm ${smartMatchFilterCategory === 'Education' ? 'btn-primary' : 'btn-secondary'}" style="padding: 5px 12px; font-size: 0.8rem;" onclick="window.SahayakApp.setSmartMatchCategory('Education');">
-              🎓 Teaching
+            <button class="btn btn-sm ${smartMatchFilterCategory === 'Education' ? 'btn-primary' : 'btn-secondary'}" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; ${smartMatchFilterCategory === 'Education' ? 'background: #4338ca; border-color: #4338ca;' : ''}" onclick="window.SahayakApp.setSmartMatchCategory('Education');">
+              🎓 Community Teaching
             </button>
           </div>
-        </div>
 
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 0.82rem; font-weight: 700; color: var(--neutral-600);">Search Radius:</span>
-          <select class="form-input" style="padding: 5px 10px; font-size: 0.82rem; width: auto; font-weight: 700;" onchange="window.SahayakApp.setSmartMatchRadius(this.value);">
-            <option value="5" ${smartMatchRadiusKm === 5 ? 'selected' : ''}>Within 5 km</option>
-            <option value="12" ${smartMatchRadiusKm === 12 ? 'selected' : ''}>Within 12 km (Default)</option>
-            <option value="25" ${smartMatchRadiusKm === 25 ? 'selected' : ''}>Within 25 km</option>
-          </select>
+          <!-- Radius & Score Sliders -->
+          <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.78rem; font-weight: 700; color: var(--neutral-600);">Radius:</span>
+              <select class="form-input" style="padding: 5px 10px; font-size: 0.8rem; width: auto; font-weight: 700; border-color: #c7d2fe;" onchange="window.SahayakApp.setSmartMatchRadius(this.value);">
+                <option value="5" ${smartMatchRadiusKm === 5 ? 'selected' : ''}>📍 5 km (Hyper-local)</option>
+                <option value="12" ${smartMatchRadiusKm === 12 ? 'selected' : ''}>📍 12 km (Recommended)</option>
+                <option value="25" ${smartMatchRadiusKm === 25 ? 'selected' : ''}>📍 25 km (Extended Suburbs)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.78rem; font-weight: 700; color: var(--neutral-600);">Min Score:</span>
+              <select class="form-input" style="padding: 5px 10px; font-size: 0.8rem; width: auto; font-weight: 700; border-color: #c7d2fe;" onchange="window.SahayakApp.setSmartMatchMinScore(this.value);">
+                <option value="70" ${smartMatchMinScore === 70 ? 'selected' : ''}>★ 70%+ Good Fit</option>
+                <option value="85" ${smartMatchMinScore === 85 ? 'selected' : ''}>★ 85%+ Strong Match</option>
+                <option value="90" ${smartMatchMinScore === 90 ? 'selected' : ''}>★ 90%+ Optimal Neural Fit</option>
+              </select>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- #1 HIGHEST RANKED MATCH HERO RADAR CARD -->
-      <div class="smart-match-hero-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+      <!-- 3. #1 HIGHEST RANKED AI MATCH DOSSIER & 4-AXIS VECTOR RADAR -->
+      <div style="background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%); border: 2px solid #6366f1; border-radius: var(--radius-xl); padding: 28px; box-shadow: 0 16px 36px -8px rgba(99, 102, 241, 0.18); margin-bottom: 28px;">
+        
+        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: flex-start;">
+          
+          <!-- LEFT: MATCH SUMMARY & 4 FACTOR BARS -->
           <div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span class="badge badge-ai" style="background: #4f46e5; color: #fff; font-weight: 800; font-size: 0.78rem;">
-                🥇 #1 BEST ALGORITHMIC FIT
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="background: linear-gradient(135deg, #4338ca, #6366f1); color: #fff; font-size: 0.76rem; font-weight: 900; padding: 3px 10px; border-radius: 4px; letter-spacing: 0.04em;">
+                🥇 #1 OPTIMAL ALGORITHMIC MATCH
               </span>
-              <span class="badge ${topMatch.urgency === 'High' ? 'badge-danger' : 'badge-primary'}">${topMatch.urgency} Urgency</span>
-              <span style="font-size: 0.82rem; color: var(--neutral-500); font-weight: 600;">${topMatch.organization}</span>
+              <span class="badge badge-danger" style="font-size: 0.72rem; font-weight: 800;">${topMatch.urgency || 'High'} Priority</span>
+              <span style="font-size: 0.82rem; color: var(--neutral-500); font-weight: 700;">${topMatch.organization}</span>
             </div>
-            <h2 style="font-size: 1.85rem; font-weight: 800; color: #1e1b4b;">${topMatch.title}</h2>
-            <div style="display: flex; gap: 18px; font-size: 0.88rem; color: var(--neutral-600); margin-top: 8px; flex-wrap: wrap;">
-              <span>📍 <strong>${topMatch.distanceKm} km</strong> (${topMatch.location.split(',')[0]})</span>
+
+            <h2 style="font-size: 1.85rem; font-weight: 900; color: #1e1b4b; margin: 4px 0 10px 0;">
+              ${topMatch.title}
+            </h2>
+
+            <div style="display: flex; gap: 16px; font-size: 0.86rem; color: var(--neutral-600); margin-bottom: 18px; flex-wrap: wrap;">
+              <span>📍 <strong>${topMatch.distanceKm} km away</strong> (${topMatch.location})</span>
               <span>🕐 <strong>${topMatch.shiftTime}</strong></span>
-              <span>👥 <strong>${topMatch.volunteersMatched} / ${topMatch.volunteersRequired} Volunteers Staffed</strong></span>
+              <span>👥 <strong>${topMatch.volunteersMatched} / ${topMatch.volunteersRequired} Matched</strong></span>
+            </div>
+
+            <p style="color: #334155; font-size: 0.9rem; line-height: 1.55; margin-bottom: 20px;">
+              ${topMatch.description}
+            </p>
+
+            <!-- 4 FACTOR PROGRESS BREAKDOWNS -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+              <div style="background: #ffffff; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid #e0e7ff; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 800; color: #312e81; margin-bottom: 4px;">
+                  <span>🎯 Verified Skills Alignment</span>
+                  <span style="color: #4338ca;">${topMatch.matchBreakdown?.skills?.score || 96}%</span>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 999px; overflow: hidden;">
+                  <div style="width: ${topMatch.matchBreakdown?.skills?.score || 96}%; height: 100%; background: linear-gradient(90deg, #4f46e5, #818cf8); border-radius: 999px;"></div>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--neutral-500); margin-top: 4px;">Direct fit for First Aid, CPR &amp; Emergency Triage</div>
+              </div>
+
+              <div style="background: #ffffff; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid #e0e7ff; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 800; color: #312e81; margin-bottom: 4px;">
+                  <span>📅 Schedule &amp; Time Window</span>
+                  <span style="color: #4338ca;">${topMatch.matchBreakdown?.availability?.score || 95}%</span>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 999px; overflow: hidden;">
+                  <div style="width: ${topMatch.matchBreakdown?.availability?.score || 95}%; height: 100%; background: linear-gradient(90deg, #4f46e5, #818cf8); border-radius: 999px;"></div>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--neutral-500); margin-top: 4px;">Matches your Saturday evening availability</div>
+              </div>
+
+              <div style="background: #ffffff; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid #e0e7ff; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 800; color: #312e81; margin-bottom: 4px;">
+                  <span>📍 GPS Proximity Vector</span>
+                  <span style="color: #4338ca;">${topMatch.matchBreakdown?.location?.score || 90}%</span>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 999px; overflow: hidden;">
+                  <div style="width: ${topMatch.matchBreakdown?.location?.score || 90}%; height: 100%; background: linear-gradient(90deg, #4f46e5, #818cf8); border-radius: 999px;"></div>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--neutral-500); margin-top: 4px;">2.4 km away (within 12 km search radius)</div>
+              </div>
+
+              <div style="background: #ffffff; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid #e0e7ff; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 800; color: #312e81; margin-bottom: 4px;">
+                  <span>⭐ Reliability &amp; Field Record</span>
+                  <span style="color: #4338ca;">${topMatch.matchBreakdown?.experience?.score || 88}%</span>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 999px; overflow: hidden;">
+                  <div style="width: ${topMatch.matchBreakdown?.experience?.score || 88}%; height: 100%; background: linear-gradient(90deg, #4f46e5, #818cf8); border-radius: 999px;"></div>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--neutral-500); margin-top: 4px;">Matches 3.5 yrs field service &amp; 98% reliability score</div>
+              </div>
+            </div>
+
+            <!-- EXPLAINABLE AI QUOTE -->
+            <div style="background: #eef2ff; border-left: 4px solid #4f46e5; border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 20px; font-size: 0.84rem; color: #312e81; line-height: 1.45;">
+              <strong>💡 Neural Matching Rationale:</strong> “${topMatch.matchExplanation || 'Calculated as the #1 optimal placement based on verified first-responder credentials, instant proximity, and highest community impact.'}”
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              ${isTopAttended ? `
+                <button class="btn btn-primary btn-lg" style="background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${topMatch.id}');">
+                  🛡️ View Verified Attendance Proof →
+                </button>
+              ` : isTopScheduled ? `
+                <button class="btn btn-primary btn-lg" style="background: #1e40af; border-color: #1e40af; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${topMatch.id}');">
+                  🚀 In Scheduled Tasks (Open Deployment) →
+                </button>
+              ` : `
+                <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #4338ca, #6366f1); border: none; font-weight: 800; box-shadow: 0 4px 14px rgba(79,70,229,0.4);" onclick="window.SahayakApp.acceptOpportunity('${topMatch.id}');">
+                  ⚡ Accept AI Match &amp; Add to Schedule →
+                </button>
+              `}
+              <button class="btn btn-secondary btn-lg" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${topMatch.id}' });">
+                🔍 Event Dossier
+              </button>
             </div>
           </div>
 
-          <div style="text-align: right; background: #eef2ff; padding: 12px 20px; border-radius: var(--radius-lg); border: 2px solid #c7d2fe;">
-            <div class="match-score-big-display">
-              ${topMatch.matchScore}<span class="match-score-pct">%</span>
+          <!-- RIGHT: SPIDER VECTOR RADAR CHART DISPLAY -->
+          <div style="background: #ffffff; border: 2px solid #c7d2fe; border-radius: var(--radius-lg); padding: 20px; text-align: center; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);">
+            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #4338ca; letter-spacing: 0.05em; margin-bottom: 12px;">
+              Multi-Factor Vector Radar
             </div>
-            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #4338ca; letter-spacing: 0.05em;">
-              Composite Match Index
+
+            <!-- SVG 4-Axis Spider Radar Scope -->
+            <div style="width: 220px; height: 220px; margin: 0 auto 12px auto; position: relative;">
+              <svg width="220" height="220" viewBox="0 0 220 220">
+                <!-- Concentric Radar Webs -->
+                <circle cx="110" cy="110" r="90" fill="none" stroke="#e0e7ff" stroke-width="1.5" />
+                <circle cx="110" cy="110" r="65" fill="none" stroke="#e0e7ff" stroke-width="1" />
+                <circle cx="110" cy="110" r="40" fill="none" stroke="#e0e7ff" stroke-width="1" stroke-dasharray="2 2" />
+                
+                <!-- 4 Axis Crosslines -->
+                <line x1="110" y1="15" x2="110" y2="205" stroke="#cbd5e1" stroke-width="1" />
+                <line x1="15" y1="110" x2="205" y2="110" stroke="#cbd5e1" stroke-width="1" />
+
+                <!-- Polygon Area for Match Scores: Top (Skills 96%), Right (Schedule 95%), Bottom (Experience 88%), Left (Proximity 90%) -->
+                <polygon points="110,24 195,110 110,189 29,110" fill="rgba(99, 102, 241, 0.25)" stroke="#4f46e5" stroke-width="2.5" />
+
+                <!-- Data Points on Axes -->
+                <circle cx="110" cy="24" r="5" fill="#4338ca" />
+                <circle cx="195" cy="110" r="5" fill="#4338ca" />
+                <circle cx="110" cy="189" r="5" fill="#4338ca" />
+                <circle cx="29" cy="110" r="5" fill="#4338ca" />
+
+                <!-- Axis Labels -->
+                <text x="110" y="12" font-size="9" font-weight="800" fill="#312e81" text-anchor="middle">SKILLS (96%)</text>
+                <text x="212" y="113" font-size="9" font-weight="800" fill="#312e81" text-anchor="start">TIME (95%)</text>
+                <text x="110" y="216" font-size="9" font-weight="800" fill="#312e81" text-anchor="middle">EXP (88%)</text>
+                <text x="8" y="113" font-size="9" font-weight="800" fill="#312e81" text-anchor="end">GPS (90%)</text>
+              </svg>
+            </div>
+
+            <div style="background: #eef2ff; border-radius: var(--radius-md); padding: 10px; border: 1px solid #c7d2fe;">
+              <div style="font-size: 2.2rem; font-weight: 900; color: #312e81; line-height: 1;">
+                ${topMatch.matchScore || 92}<span style="font-size: 1.2rem; color: #6366f1;">%</span>
+              </div>
+              <div style="font-size: 0.72rem; font-weight: 800; color: #4338ca; text-transform: uppercase; margin-top: 2px;">
+                Overall Neural Fit Score
+              </div>
             </div>
           </div>
+
         </div>
 
-        <!-- 4 FACTOR BREAKDOWN PROGRESS BARS -->
-        <div class="match-factors-grid">
-          <div class="factor-bar-item">
-            <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Verified Skills Fit
-              </span>
-              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.skills?.score || 96}%</span>
-            </div>
-            <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.skills?.score || 96}%;"></div>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${topMatch.matchBreakdown?.skills?.label || 'Direct match for First Aid & Triage'}
-            </div>
-          </div>
-
-          <div class="factor-bar-item">
-            <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Schedule &amp; Availability
-              </span>
-              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.availability?.score || 95}%</span>
-            </div>
-            <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.availability?.score || 95}%;"></div>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${topMatch.matchBreakdown?.availability?.label || 'Aligns with your active weekend availability'}
-            </div>
-          </div>
-
-          <div class="factor-bar-item">
-            <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Proximity Vector (Distance)
-              </span>
-              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.location?.score || 90}%</span>
-            </div>
-            <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.location?.score || 90}%;"></div>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${topMatch.matchBreakdown?.location?.label || `${topMatch.distanceKm} km away (inside your ${user.maxTravelRadiusKm || 12} km radius)`}
-            </div>
-          </div>
-
-          <div class="factor-bar-item">
-            <div class="factor-bar-header">
-              <span style="display: flex; align-items: center; gap: 6px; color: #312e81;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Experience &amp; Reliability
-              </span>
-              <span style="font-weight: 800; color: #4338ca;">${topMatch.matchBreakdown?.experience?.score || 88}%</span>
-            </div>
-            <div class="factor-progress-bg">
-              <div class="factor-progress-fill" style="width: ${topMatch.matchBreakdown?.experience?.score || 88}%;"></div>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 6px;">
-              ${topMatch.matchBreakdown?.experience?.label || `Matches ${user.experience || '3.5 yrs'} track record with 98% reliability`}
-            </div>
-          </div>
-        </div>
-
-        <!-- EXPLANATION CALLOUT -->
-        <div class="ai-recommendation-quote">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" style="flex-shrink:0; margin-top: 2px;">
-            <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          <div>
-            <strong>AI Neural Matching Rationale:</strong> “${topMatch.matchExplanation || 'Recommended because your verified certifications and proximity make you the top candidate for immediate deployment.'}”
-          </div>
-        </div>
-
-        <!-- ACTION BUTTONS -->
-        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-          <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #4338ca, #6366f1); border: none; font-weight: 800; box-shadow: 0 4px 14px rgba(79,70,229,0.4);" onclick="window.SahayakApp.acceptOpportunity('${topMatch.id}');">
-            ⚡ Accept Opportunity &amp; Schedule Deployment
-          </button>
-          <button class="btn btn-secondary btn-lg" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${topMatch.id}' });">
-            🔍 View Full Event Details
-          </button>
-        </div>
       </div>
 
-      <!-- COMPARATIVE RECOMMENDATION GRID (RANKED MATCHES) -->
+      <!-- 4. COMPARATIVE RANKED MATCHES GRID -->
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <div>
-            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--primary-900);">
-              Comparative Ranked Matches
+            <h3 style="font-size: 1.3rem; font-weight: 900; color: var(--primary-900); margin: 0 0 2px 0;">
+              Ranked Alternative Recommendations
             </h3>
-            <p style="font-size: 0.82rem; color: var(--neutral-500);">Other community events matching your profile sorted by suitability score.</p>
+            <p style="font-size: 0.82rem; color: var(--neutral-500); margin: 0;">
+              Additional drives matching your qualifications, sorted by algorithm compatibility score.
+            </p>
           </div>
           <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.navigateTo('opportunities');">
-            View All Opportunities Catalog →
+            View All Catalog (${state.opportunities.length}) →
           </button>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 20px;">
-          ${otherMatches.map((opp, idx) => `
-            <div class="card" style="display: flex; flex-direction: column; border-top: 4px solid #6366f1; transition: transform 0.2s ease;">
+          ${otherMatches.map((opp, idx) => {
+            const isSch = (state.scheduledTasks || []).some(t => t.id === opp.id || t.eventId === opp.id);
+            const isAtt = (user.attendedEvents || []).some(a => a.eventId === opp.id);
+            return `
+            <div class="card" style="display: flex; flex-direction: column; border-top: 4px solid #6366f1; border-radius: var(--radius-lg); box-shadow: 0 4px 14px rgba(0,0,0,0.04);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                 <span class="badge badge-neutral">${opp.category}</span>
-                <span class="badge badge-ai" style="font-size: 0.88rem; font-weight: 800; background: #e0e7ff; color: #3730a3;">
-                  ★ #${idx + 2} • ${opp.matchScore}% Fit
+                <span class="badge badge-ai" style="font-size: 0.82rem; font-weight: 800; background: #e0e7ff; color: #3730a3;">
+                  ★ Rank #${idx + 2} • ${opp.matchScore}% Match
                 </span>
               </div>
 
@@ -1727,27 +1803,37 @@
                 ${opp.title}
               </h4>
               <div style="font-size: 0.8rem; color: var(--neutral-500); margin-bottom: 12px;">
-                ${opp.organization} • 📍 ${opp.distanceKm} km away
+                🏢 ${opp.organization} • 📍 ${opp.distanceKm} km away
               </div>
 
-              <p style="font-size: 0.84rem; color: var(--neutral-600); margin-bottom: 16px; flex: 1; line-height: 1.5;">
+              <p style="font-size: 0.84rem; color: var(--neutral-600); margin-bottom: 14px; flex: 1; line-height: 1.5;">
                 ${opp.description ? opp.description.substring(0, 115) + '...' : ''}
               </p>
 
               <div style="background: #f8fafc; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 14px; font-size: 0.78rem; color: #475569;">
-                <strong>Key Skills:</strong> ${(opp.requiredSkills || []).slice(0, 2).join(', ')}
+                <strong>Required Skills:</strong> ${(opp.requiredSkills || []).slice(0, 2).join(', ')}
               </div>
 
               <div style="display: flex; gap: 8px; margin-top: auto;">
                 <button class="btn btn-sm btn-secondary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${opp.id}' });">
                   Details
                 </button>
-                <button class="btn btn-sm btn-primary" style="flex: 1; background: #4f46e5; border: none;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
-                  Accept
-                </button>
+                ${isAtt ? `
+                  <button class="btn btn-sm btn-primary" style="flex: 1; background: #059669; border-color: #059669;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
+                    ✓ Attended
+                  </button>
+                ` : isSch ? `
+                  <button class="btn btn-sm btn-primary" style="flex: 1; background: #1e40af; border-color: #1e40af;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
+                    🚀 Scheduled
+                  </button>
+                ` : `
+                  <button class="btn btn-sm btn-primary" style="flex: 1; background: #4f46e5; border: none; font-weight: 800;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
+                    ⚡ Accept Match
+                  </button>
+                `}
               </div>
             </div>
-          `).join('')}
+          `}).join('')}
         </div>
       </div>
     `;
@@ -5054,6 +5140,7 @@
     updateRadius,
     setSmartMatchCategory,
     setSmartMatchRadius,
+    setSmartMatchMinScore,
     setSelectedNgoEvent,
     saveSettings,
     saveSupabaseSettings,
