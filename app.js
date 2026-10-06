@@ -877,36 +877,87 @@
         <!-- RIGHT COLUMN: SCHEDULE, RELIABILITY & STATS -->
         <div style="display: flex; flex-direction: column; gap: 24px;">
 
-          <!-- 3. TODAY'S SCHEDULE CARD -->
+          <!-- 3. SCHEDULED TASKS & UPCOMING SHIFTS -->
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Today's Schedule
-              </h3>
-              <span class="badge ${state.activeDeployment.status === 'DEPLOYED' ? 'badge-success' : 'badge-primary'}">
-                ${state.activeDeployment.status}
+              <div>
+                <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  Scheduled Tasks &amp; Shifts
+                </h3>
+                <div style="font-size: 0.76rem; color: var(--neutral-500); margin-top: 2px;">
+                  Your accepted volunteer commitments
+                </div>
+              </div>
+              <span class="badge badge-primary">
+                ${(state.scheduledTasks || []).length} Scheduled
               </span>
             </div>
 
-            <div style="padding: 16px; background-color: var(--neutral-50); border-radius: var(--radius-md); border: 1px solid var(--neutral-200); margin-bottom: 16px;">
-              <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--primary-700); margin-bottom: 4px;">
-                Confirmed Deployment
+            ${(state.scheduledTasks && state.scheduledTasks.length > 0) ? `
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+                ${state.scheduledTasks.map(task => `
+                  <div style="padding: 14px; background-color: var(--neutral-50); border-radius: var(--radius-md); border: 1px solid var(--neutral-200); position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                      <span class="badge ${task.status === 'DEPLOYED' ? 'badge-success' : 'badge-primary'}" style="font-size: 0.7rem;">
+                        ${task.status === 'DEPLOYED' ? '● ON-GROUND SHIFT ACTIVE' : '✓ CONFIRMED SHIFT'}
+                      </span>
+                      <span style="font-size: 0.72rem; color: var(--neutral-500); font-weight: 700;">${task.date || 'Today'}</span>
+                    </div>
+
+                    <h4 style="font-weight: 800; font-size: 0.98rem; color: var(--primary-900); margin-bottom: 4px;">
+                      ${task.title}
+                    </h4>
+                    
+                    <div style="font-size: 0.78rem; color: var(--neutral-600); margin-bottom: 2px;">
+                      🏢 <strong>${task.organization}</strong>
+                    </div>
+
+                    <div style="font-size: 0.78rem; color: var(--neutral-600); margin-bottom: 2px;">
+                      📍 ${task.location}
+                    </div>
+
+                    <div style="font-size: 0.78rem; color: var(--primary-800); font-weight: 700; margin-bottom: 8px;">
+                      🕐 ${task.shiftTime} (${task.hours || 4} hrs)
+                    </div>
+
+                    <!-- Assigned Tasks Sublist -->
+                    ${task.assignedTasks && task.assignedTasks.length > 0 ? `
+                      <div style="margin-bottom: 10px; background: #fff; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid var(--neutral-200);">
+                        <div style="font-size: 0.7rem; text-transform: uppercase; font-weight: 800; color: var(--neutral-500); margin-bottom: 4px;">Scheduled Field Duties:</div>
+                        <ul style="margin: 0; padding-left: 16px; font-size: 0.76rem; color: var(--neutral-700); line-height: 1.4;">
+                          ${task.assignedTasks.slice(0, 2).map(t => `<li>${t}</li>`).join('')}
+                        </ul>
+                      </div>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 8px;">
+                      <button class="btn btn-sm btn-primary" style="flex: 1; font-weight: 800; font-size: 0.78rem; justify-content: center;" onclick="window.SahayakApp.startScheduledTask('${task.id || task.eventId}');">
+                        🚀 Open Deployment →
+                      </button>
+                      <button class="btn btn-sm btn-secondary" style="font-size: 0.78rem;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId}' });">
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
               </div>
-              <div style="font-weight: 800; font-size: 1.05rem; color: var(--primary-900);">
-                ${state.activeDeployment.eventTitle}
+            ` : `
+              <div style="text-align: center; padding: 24px 16px; background: var(--neutral-50); border-radius: var(--radius-md); border: 1px dashed var(--neutral-300); margin-bottom: 14px;">
+                <div style="font-size: 1.8rem; margin-bottom: 6px;">📅</div>
+                <div style="font-weight: 700; font-size: 0.9rem; color: var(--neutral-700); margin-bottom: 4px;">No Scheduled Tasks Yet</div>
+                <p style="font-size: 0.78rem; color: var(--neutral-500); margin-bottom: 12px;">
+                  Explore recommended community drives and click <strong>Accept Opportunity</strong> to add them to your schedule.
+                </p>
+                <button class="btn btn-sm btn-primary" style="font-size: 0.8rem;" onclick="window.SahayakApp.navigateTo('smart-match');">
+                  ⚡ Find Matching Drives
+                </button>
               </div>
-              <div style="font-size: 0.82rem; color: var(--neutral-600); margin-top: 4px;">
-                📍 ${state.activeDeployment.assignedLocation}
-              </div>
-              <div style="font-size: 0.82rem; color: var(--neutral-600); margin-top: 2px;">
-                🕐 ${state.activeDeployment.shiftTime}
-              </div>
-            </div>
+            `}
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button class="btn btn-primary btn-block" onclick="window.SahayakApp.navigateTo('deployments');">
-                Go to Deployment Tracker →
+              <button class="btn btn-secondary btn-block" style="font-size: 0.82rem;" onclick="window.SahayakApp.navigateTo('deployments');">
+                Go to Deployment Tracker Console →
               </button>
             </div>
           </div>
@@ -1171,12 +1222,61 @@
             </p>
 
             <div style="padding: 12px; background: var(--neutral-50); border-radius: var(--radius-md); border: 1px solid var(--neutral-200); font-size: 0.82rem; display: flex; justify-content: space-between;">
-              <span>No-Show Rate: <strong style="color: var(--success-600);">0.0%</strong></span>
-              <span>Peer Rating: <strong>4.9 / 5.0 ★</strong></span>
-            </div>
+      </div>
+
+      <!-- 3. VOLUNTEER SCHEDULED TASKS & CONFIRMED UPCOMING DRIVES -->
+      <div class="card" style="margin-top: 24px;">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              My Scheduled Tasks &amp; Confirmed Deployments
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--neutral-500); margin-top: 2px;">
+              All upcoming field missions you have accepted and confirmed.
+            </p>
           </div>
+          <span class="badge badge-primary">${(state.scheduledTasks || []).length} Confirmed</span>
         </div>
 
+        ${(state.scheduledTasks && state.scheduledTasks.length > 0) ? `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            ${state.scheduledTasks.map(task => `
+              <div style="padding: 16px; background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-md); display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                  <span class="badge ${task.status === 'DEPLOYED' ? 'badge-success' : 'badge-primary'}" style="font-size: 0.72rem;">
+                    ${task.status === 'DEPLOYED' ? '● ON-GROUND SHIFT' : '✓ CONFIRMED SHIFT'}
+                  </span>
+                  <span style="font-size: 0.76rem; color: var(--neutral-500); font-weight: 700;">${task.date || 'Today'}</span>
+                </div>
+                <h4 style="font-weight: 800; font-size: 1.05rem; color: var(--primary-900); margin-bottom: 4px;">
+                  ${task.title}
+                </h4>
+                <div style="font-size: 0.8rem; color: var(--neutral-600); margin-bottom: 2px;">
+                  🏢 <strong>${task.organization}</strong>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--neutral-600); margin-bottom: 4px;">
+                  📍 ${task.location}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--primary-800); font-weight: 700; margin-bottom: 12px;">
+                  🕐 ${task.shiftTime} (${task.hours || 4} hrs)
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: auto;">
+                  <button class="btn btn-sm btn-primary" style="flex: 1;" onclick="window.SahayakApp.startScheduledTask('${task.id || task.eventId}');">
+                    🚀 Start Shift Tracker
+                  </button>
+                  <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId}' });">
+                    View Brief
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div style="padding: 20px; text-align: center; color: var(--neutral-500); font-size: 0.88rem;">
+            No scheduled tasks currently. Accept an opportunity from the Smart Match or Opportunities directory.
+          </div>
+        `}
       </div>
     `;
   }
@@ -1197,8 +1297,10 @@
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
-        ${state.opportunities.map(opp => `
-          <div class="opportunity-card ${opp.isAiRecommended ? 'featured' : ''}">
+        ${state.opportunities.map(opp => {
+          const isScheduled = (state.scheduledTasks || []).some(t => t.id === opp.id || t.eventId === opp.id);
+          return `
+          <div class="opportunity-card ${opp.isAiRecommended ? 'featured' : ''}" style="${isScheduled ? 'border-top: 4px solid #10b981;' : ''}">
             <div class="opp-card-top">
               <div>
                 <div class="opp-org-info">
@@ -1208,8 +1310,11 @@
                 </div>
                 <h3 class="opp-title">${opp.title}</h3>
               </div>
-              <div class="opp-match-badge">
-                ${opp.matchScore}% Match
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                <div class="opp-match-badge">
+                  ${opp.matchScore}% Match
+                </div>
+                ${isScheduled ? `<span class="badge badge-success" style="font-size: 0.68rem;">✓ In Scheduled Tasks</span>` : ''}
               </div>
             </div>
 
@@ -1234,15 +1339,21 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--neutral-100);">
-              <button class="btn btn-primary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${opp.id}' });">
-                View Opportunity
+              <button class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${opp.id}' });">
+                View Details
               </button>
-              <button class="btn btn-secondary" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
-                Quick Join
-              </button>
+              ${isScheduled ? `
+                <button class="btn btn-primary" style="flex: 1; background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
+                  🚀 Open Scheduled Task →
+                </button>
+              ` : `
+                <button class="btn btn-primary" style="flex: 1; font-weight: 800;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
+                  ⚡ Accept &amp; Schedule →
+                </button>
+              `}
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
       </div>
     `;
   }
@@ -1599,9 +1710,15 @@
 
             <!-- BUTTONS -->
             <div style="display: flex; gap: 16px; padding-top: 20px; border-top: 1px solid var(--neutral-200);">
-              <button class="btn btn-primary btn-lg" style="flex: 1;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
-                Accept / Join Event
-              </button>
+              ${(state.scheduledTasks || []).some(t => t.id === opp.id || t.eventId === opp.id) ? `
+                <button class="btn btn-primary btn-lg" style="flex: 1; background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
+                  🚀 In Scheduled Tasks (Open Deployment) →
+                </button>
+              ` : `
+                <button class="btn btn-primary btn-lg" style="flex: 1; font-weight: 800;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
+                  ⚡ Accept Opportunity &amp; Add to Schedule →
+                </button>
+              `}
               <button class="btn btn-secondary btn-lg" onclick="window.SahayakApp.navigateTo('opportunities');">
                 Back to Opportunities
               </button>
@@ -2322,20 +2439,72 @@
 
   function acceptOpportunity(eventId) {
     const opp = state.opportunities.find(o => o.id === eventId) || state.opportunities[0];
-    opp.volunteersMatched += 1;
+    opp.volunteersMatched = (opp.volunteersMatched || 0) + 1;
 
+    // Maintain persistent scheduledTasks list
+    if (!state.scheduledTasks) {
+      state.scheduledTasks = [];
+    }
+
+    const existingIdx = state.scheduledTasks.findIndex(t => t.id === opp.id || t.eventId === opp.id);
+    const scheduledItem = {
+      id: opp.id,
+      eventId: opp.id,
+      title: opp.title,
+      organization: opp.organization,
+      location: opp.location,
+      shiftTime: opp.shiftTime,
+      date: opp.date || "Today, Oct 5, 2026",
+      hours: opp.hours || 4,
+      status: "MATCHED",
+      category: opp.category,
+      emergencyContact: opp.emergencyContact || { name: "Lead Coordinator", phone: "+91 98200 00000" },
+      assignedTasks: opp.tasks || [
+        "On-site arrival & safety briefing",
+        "Execute frontline field operations",
+        "Debrief with site supervisor"
+      ],
+      acceptedAt: new Date().toISOString()
+    };
+
+    if (existingIdx >= 0) {
+      state.scheduledTasks[existingIdx] = scheduledItem;
+    } else {
+      state.scheduledTasks.unshift(scheduledItem);
+    }
+
+    // Set as active deployment
     state.activeDeployment.status = 'MATCHED';
     state.activeDeployment.eventId = opp.id;
     state.activeDeployment.eventTitle = opp.title;
+    state.activeDeployment.organization = opp.organization;
     state.activeDeployment.assignedLocation = opp.location;
     state.activeDeployment.shiftTime = opp.shiftTime;
+    state.activeDeployment.shiftHours = opp.hours || 4;
+    state.activeDeployment.qrCodeToken = `SHK-2026-${opp.id.toUpperCase()}-SECTOR`;
 
     if (window.SahayakDB && window.SahayakDB.isConfigured()) {
       window.SahayakDB.saveDeployment(state.activeDeployment);
     }
 
-    showToast(`Opportunity Accepted! You have been deployed to ${opp.title}.`, 'success');
+    showToast(`🎉 Accepted! "${opp.title}" is now added to your Scheduled Tasks & Shifts.`, 'success');
     state.currentDemoStep = 6;
+    renderApp();
+    navigateTo('dashboard');
+  }
+
+  function startScheduledTask(taskId) {
+    const task = (state.scheduledTasks || []).find(t => t.id === taskId || t.eventId === taskId);
+    if (task) {
+      state.activeDeployment.status = task.status || 'MATCHED';
+      state.activeDeployment.eventId = task.eventId || task.id;
+      state.activeDeployment.eventTitle = task.title;
+      state.activeDeployment.organization = task.organization;
+      state.activeDeployment.assignedLocation = task.location;
+      state.activeDeployment.shiftTime = task.shiftTime;
+      state.activeDeployment.shiftHours = task.hours || 4;
+      state.activeDeployment.qrCodeToken = `SHK-2026-${(task.eventId || task.id).toUpperCase()}-SECTOR`;
+    }
     navigateTo('deployments');
   }
 
@@ -4436,6 +4605,7 @@
     openModal,
     closeModal,
     acceptOpportunity,
+    startScheduledTask,
     checkInDeployment,
     checkOutDeployment,
     openLivePhotoClockInModal,

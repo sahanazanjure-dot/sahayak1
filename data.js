@@ -238,6 +238,30 @@ const INITIAL_DATA = {
     notes: "Report to Room 3 for 15-minute briefing prior to 4:00 PM opening."
   },
 
+  // Scheduled / Accepted Volunteer Shifts & Tasks
+  scheduledTasks: [
+    {
+      id: "opp-med-01",
+      eventId: "opp-med-01",
+      title: "Medical Relief Camp",
+      organization: "Helping Hands Foundation",
+      location: "Community Health Centre, Andheri West",
+      shiftTime: "4:00 PM – 8:00 PM",
+      date: "Today, Oct 5, 2026",
+      hours: 4,
+      status: "MATCHED",
+      category: "Healthcare & Relief",
+      emergencyContact: { name: "Dr. S. Mehta", phone: "+91 98201 44321" },
+      assignedTasks: [
+        "On-site arrival & safety briefing",
+        "Patient vitals recording & triage assistance",
+        "Medicine kit distribution with Dr. S. Mehta"
+      ],
+      acceptedAt: "2026-10-05T10:00:00Z"
+    }
+  ],
+
+
   // NGO Managed Volunteers pool
   ngoVolunteers: [
     {
