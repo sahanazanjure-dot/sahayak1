@@ -932,10 +932,10 @@
                     ` : ''}
 
                     <div style="display: flex; gap: 8px;">
-                      <button class="btn btn-sm btn-primary" style="flex: 1; font-weight: 800; font-size: 0.78rem; justify-content: center;" onclick="window.SahayakApp.startScheduledTask('${task.id || task.eventId}');">
+                      <button type="button" class="btn btn-sm btn-primary" style="flex: 1; font-weight: 800; font-size: 0.8rem; justify-content: center; padding: 8px 12px; cursor: pointer; background: #1e40af; border-color: #1e40af;" onclick="event.stopPropagation(); window.SahayakApp.startScheduledTask('${task.id || task.eventId || 'opp-med-01'}');">
                         🚀 Open Deployment →
                       </button>
-                      <button class="btn btn-sm btn-secondary" style="font-size: 0.78rem;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId}' });">
+                      <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; padding: 8px 14px; cursor: pointer;" onclick="event.stopPropagation(); window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId || 'opp-med-01'}' });">
                         Details
                       </button>
                     </div>
@@ -949,14 +949,14 @@
                 <p style="font-size: 0.78rem; color: var(--neutral-500); margin-bottom: 12px;">
                   Explore recommended community drives and click <strong>Accept Opportunity</strong> to add them to your schedule.
                 </p>
-                <button class="btn btn-sm btn-primary" style="font-size: 0.8rem;" onclick="window.SahayakApp.navigateTo('smart-match');">
+                <button type="button" class="btn btn-sm btn-primary" style="font-size: 0.8rem; cursor: pointer;" onclick="event.stopPropagation(); window.SahayakApp.navigateTo('smart-match');">
                   ⚡ Find Matching Drives
                 </button>
               </div>
             `}
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button class="btn btn-secondary btn-block" style="font-size: 0.82rem;" onclick="window.SahayakApp.navigateTo('deployments');">
+              <button type="button" class="btn btn-secondary btn-block" style="font-size: 0.84rem; padding: 10px; cursor: pointer; font-weight: 700;" onclick="event.stopPropagation(); window.SahayakApp.navigateTo('deployments');">
                 Go to Deployment Tracker Console →
               </button>
             </div>
@@ -2804,7 +2804,11 @@
       state.activeDeployment.qrCodeToken = `SHK-2026-${(task.eventId || task.id || 'GEN').toUpperCase()}-SECTOR`;
     }
 
-    navigateTo('deployments');
+    state.activePage = 'deployments';
+    updateDemoStepFromPage('deployments');
+    renderApp();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('🚀 Opening Deployment Tracker for: ' + (state.activeDeployment.eventTitle || 'Mission'), 'primary');
   }
 
   function markAttendanceVerified(eventId) {
