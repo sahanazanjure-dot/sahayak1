@@ -2061,7 +2061,66 @@
           </div>
         </div>
 
-        <!-- 4. MAIN DEPLOYMENT ACTION & DETAILS 2-COLUMN GRID -->
+        <!-- 4. OFFICIAL ATTENDANCE PROOF & VERIFICATION HUB (KEY FEATURE) -->
+        <div class="card" style="margin-bottom: 24px; border: 2px solid ${dep.status === 'MATCHED' ? '#f59e0b' : '#10b981'}; background: linear-gradient(to right, #ffffff, #f0fdf4);">
+          <div class="card-header" style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: ${dep.status === 'MATCHED' ? '#fef3c7' : '#dcfce7'}; color: ${dep.status === 'MATCHED' ? '#d97706' : '#166534'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                ${dep.status === 'MATCHED' ? '📸' : '🛡️'}
+              </div>
+              <div>
+                <h4 style="font-weight: 800; font-size: 1.05rem; color: var(--primary-900); margin: 0;">
+                  Event Attendance Proof &amp; Verification Hub
+                </h4>
+                <p style="font-size: 0.78rem; color: var(--neutral-500); margin: 2px 0 0 0;">
+                  Mandatory on-ground verification: Geotagged photo proof, GPS geofence lock, and supervisor sign-off.
+                </p>
+              </div>
+            </div>
+            <span class="badge ${dep.status === 'MATCHED' ? 'badge-danger' : 'badge-success'}" style="font-size: 0.75rem; padding: 5px 12px; font-weight: 800;">
+              ${dep.status === 'MATCHED' ? '⚠️ ATTENDANCE PROOF REQUIRED' : '✓ ATTENDANCE VERIFIED &amp; GEOFENCE LOCKED'}
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; padding: 12px; background: #fff; border-radius: var(--radius-md); border: 1px solid var(--neutral-200); margin-bottom: 12px;">
+            <!-- Thumbnail of Photo Proof -->
+            <div style="position: relative; width: 68px; height: 68px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid #10b981; flex-shrink: 0; cursor: pointer;" onclick="window.SahayakApp.openPhotoProofViewer();" title="Click to view full photo proof">
+              <img src="${currentPhoto}" alt="Verified Attendance Proof" style="width: 100%; height: 100%; object-fit: cover;" />
+              <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: #a7f3d0; font-size: 0.6rem; padding: 1px 4px; border-radius: 2px; font-family: monospace;">GPS ✓</span>
+            </div>
+
+            <!-- Proof Details -->
+            <div style="font-size: 0.82rem; line-height: 1.45;">
+              <div style="font-weight: 800; color: var(--primary-900); margin-bottom: 2px;">
+                ${dep.status === 'MATCHED' ? 'Awaiting On-Site Punch-In Photo' : '✓ On-Ground Attendance Stamped &amp; Validated'}
+              </div>
+              <div style="color: var(--neutral-600); font-size: 0.76rem;">
+                <strong>GPS Coordinates:</strong> 19.1197° N, 72.8464° E (14m inside venue perimeter)
+              </div>
+              <div style="color: var(--neutral-600); font-size: 0.76rem;">
+                <strong>Supervisor Sign-Off:</strong> Dr. S. Mehta (Chief Medical Officer) • Station: Room 3 Triage
+              </div>
+              <div style="color: #059669; font-size: 0.74rem; font-weight: 700; margin-top: 2px;">
+                Token: <span style="font-family: monospace;">${dep.qrCodeToken}</span> • Verification Code: <span style="font-family: monospace;">8492-MED</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons for Attendance -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <button class="btn btn-sm btn-primary" style="font-size: 0.74rem; padding: 6px 12px; font-weight: 800; background: #059669; border-color: #059669;" onclick="window.SahayakApp.openAttendanceQrPassModal();">
+                📲 Show Event Pass QR
+              </button>
+              <button class="btn btn-sm btn-secondary" style="font-size: 0.74rem; padding: 5px 10px;" onclick="window.SahayakApp.openLivePhotoClockInModal();">
+                📸 ${dep.status === 'MATCHED' ? 'Capture Attendance Photo' : 'Update Photo Proof'}
+              </button>
+              <button class="btn btn-sm btn-secondary" style="font-size: 0.74rem; padding: 5px 10px;" onclick="window.SahayakApp.openAttendanceSlipModal();">
+                📄 Attendance Slip
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. MAIN DEPLOYMENT ACTION & DETAILS 2-COLUMN GRID -->
         <div class="deployment-action-card" style="margin-bottom: 24px;">
           
           <!-- LEFT COLUMN: LIVE TELEMETRY / STOPWATCH / PHOTO PROOF -->
@@ -2513,34 +2572,35 @@
   ======================================================== */
   function openLivePhotoClockInModal() {
     selectedPresetPhoto = PHOTO_PRESETS.medical;
+    const dep = state.activeDeployment;
 
     openModal(`
-      <div class="modal-window" style="max-width: 540px; text-align: center;">
+      <div class="modal-window" style="max-width: 560px; text-align: center;">
         <div class="modal-header" style="background: linear-gradient(135deg, #065f46, #047857); color: #fff;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            <span style="font-weight: 800; font-size: 1.05rem;">Live Photo Check-In &amp; Clock-In</span>
+            <span style="font-weight: 800; font-size: 1.05rem;">Mandatory On-Site Attendance &amp; Photo Proof</span>
           </div>
           <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
         </div>
 
-        <div class="modal-body" style="padding: 24px;">
+        <div class="modal-body" style="padding: 22px;">
           <!-- GPS GEOFENCE TELEMETRY BADGE -->
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.82rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); margin-bottom: 14px; font-size: 0.82rem;">
             <div style="display: flex; align-items: center; gap: 8px; text-align: left;">
               <span class="pulse-green-dot"></span>
               <div>
-                <strong style="color: #065f46;">Geofence Perimeter Locked</strong>
-                <div style="font-size: 0.74rem; color: #047857;">19.1197° N, 72.8464° E • Distance: 18m (Inside venue radius)</div>
+                <strong style="color: #065f46;">Geofence Perimeter Locked (14m away)</strong>
+                <div style="font-size: 0.74rem; color: #047857;">19.1197° N, 72.8464° E • Station: Room 3 Triage Booth</div>
               </div>
             </div>
-            <span class="badge badge-success" style="font-size: 0.7rem;">✓ GPS ACTIVE</span>
+            <span class="badge badge-success" style="font-size: 0.7rem;">✓ GPS LOCKED</span>
           </div>
 
           <!-- PHOTO PROOF VIEWFINDER -->
-          <div class="photo-viewfinder-wrap" id="photo-preview-wrap">
+          <div class="photo-viewfinder-wrap" id="photo-preview-wrap" style="height: 180px; margin-bottom: 12px;">
             <div class="photo-viewfinder-scanline"></div>
-            <img id="checkin-preview-img" src="${selectedPresetPhoto}" alt="Check-in Photo Preview" />
+            <img id="checkin-preview-img" src="${selectedPresetPhoto}" alt="Check-in Photo Preview" style="width: 100%; height: 100%; object-fit: cover;" />
             <div class="photo-viewfinder-hud">
               <span>📍 LIVE GEOTAG: ANDHERI WEST HUB</span>
               <span id="live-camera-time">⏱️ ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
@@ -2548,42 +2608,186 @@
           </div>
 
           <!-- PHOTO SELECTOR & UPLOAD CONTROLS -->
-          <div style="margin-bottom: 18px;">
-            <div style="font-size: 0.78rem; font-weight: 700; color: var(--neutral-600); margin-bottom: 8px; text-align: left;">
-              Select On-Site Proof Preset or Upload Custom Photo:
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--neutral-600); margin-bottom: 6px; text-align: left;">
+              Capture On-Ground Attendance Photo Proof:
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-              <button type="button" class="photo-preset-btn active" id="btn-preset-med" onclick="window.SahayakApp.setPhotoPreset('medical');">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+              <button type="button" class="photo-preset-btn active" id="btn-preset-med" style="padding: 6px 8px; font-size: 0.76rem;" onclick="window.SahayakApp.setPhotoPreset('medical');">
                 🏥 Triage Booth
               </button>
-              <button type="button" class="photo-preset-btn" id="btn-preset-sup" onclick="window.SahayakApp.setPhotoPreset('supply');">
+              <button type="button" class="photo-preset-btn" id="btn-preset-sup" style="padding: 6px 8px; font-size: 0.76rem;" onclick="window.SahayakApp.setPhotoPreset('supply');">
                 📦 Supply Desk
               </button>
-              <button type="button" class="photo-preset-btn" id="btn-preset-fld" onclick="window.SahayakApp.setPhotoPreset('field');">
+              <button type="button" class="photo-preset-btn" id="btn-preset-fld" style="padding: 6px 8px; font-size: 0.76rem;" onclick="window.SahayakApp.setPhotoPreset('field');">
                 🎒 Mobile Squad
               </button>
             </div>
 
             <div style="display: flex; gap: 8px; align-items: center;">
               <input type="file" id="custom-photo-file" accept="image/*" style="display: none;" onchange="window.SahayakApp.handlePhotoFileUpload(event);" />
-              <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="document.getElementById('custom-photo-file').click();">
-                📁 Upload Device Photo
+              <button type="button" class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.76rem;" onclick="document.getElementById('custom-photo-file').click();">
+                📁 Upload Photo from Device
               </button>
-              <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="window.SahayakApp.triggerCameraSnapshot();">
-                📸 Snap Real Camera
+              <button type="button" class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.76rem;" onclick="window.SahayakApp.triggerCameraSnapshot();">
+                📸 Take Live Camera Snapshot
               </button>
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 18px; text-align: left;">
-            <label class="form-label" style="font-size: 0.8rem;">On-Site Arrival Notes (Optional)</label>
-            <input type="text" id="input-checkin-notes" class="form-input" value="Reported to Room 3 with Dr. S. Mehta; safety kit &amp; vitals tablet active." style="font-size: 0.84rem;" />
+          <!-- SUPERVISOR SIGN-OFF PIN / VERIFICATION -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; text-align: left;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.75rem;">Supervisor Sign-Off</label>
+              <input type="text" class="form-input" value="Dr. S. Mehta (Lead Officer)" style="font-size: 0.78rem; font-weight: 700;" readonly />
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.75rem;">On-Site Station PIN</label>
+              <input type="text" id="input-supervisor-pin" class="form-input" value="8492" style="font-size: 0.78rem; font-family: monospace; font-weight: 800; color: #059669;" placeholder="e.g. 8492" />
+            </div>
           </div>
 
           <div style="display: flex; gap: 10px;">
             <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.closeModal();">Cancel</button>
-            <button type="button" class="btn btn-primary" style="flex: 2; background: #059669; border-color: #059669; font-weight: 800; font-size: 0.95rem;" onclick="window.SahayakApp.confirmPhotoClockIn();">
-              ⚡ Confirm Proof &amp; Start Shift Clock →
+            <button type="button" class="btn btn-primary" style="flex: 2; background: #059669; border-color: #059669; font-weight: 800; font-size: 0.92rem;" onclick="window.SahayakApp.confirmPhotoClockIn();">
+              ⚡ Verify Attendance Proof &amp; Clock In →
+            </button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  function openAttendanceQrPassModal() {
+    const dep = state.activeDeployment;
+    const user = state.currentUser;
+
+    openModal(`
+      <div class="modal-window" style="max-width: 480px; text-align: center;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #065f46); color: #fff;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+            <span style="font-weight: 800; font-size: 1.05rem;">Official Volunteer Attendance Pass</span>
+          </div>
+          <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
+        </div>
+
+        <div class="modal-body" style="padding: 24px; background: #fafafa;">
+          <p style="font-size: 0.82rem; color: var(--neutral-600); margin-bottom: 16px;">
+            Present this QR verification pass to the on-site NGO supervisor (<strong>Dr. S. Mehta</strong>) to confirm your attendance.
+          </p>
+
+          <!-- QR PASS TICKET -->
+          <div style="background: #fff; border: 2px dashed #2563eb; border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 12px rgba(37,99,235,0.1); margin-bottom: 18px;">
+            <!-- QR Pattern Simulation -->
+            <div style="width: 140px; height: 140px; margin: 0 auto 14px auto; background: #0f172a; border-radius: var(--radius-md); padding: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <rect width="120" height="120" fill="#ffffff" rx="6" />
+                <!-- QR Finder Corners -->
+                <rect x="8" y="8" width="32" height="32" fill="#0f172a" />
+                <rect x="14" y="14" width="20" height="20" fill="#ffffff" />
+                <rect x="18" y="18" width="12" height="12" fill="#0f172a" />
+
+                <rect x="80" y="8" width="32" height="32" fill="#0f172a" />
+                <rect x="86" y="14" width="20" height="20" fill="#ffffff" />
+                <rect x="90" y="18" width="12" height="12" fill="#0f172a" />
+
+                <rect x="8" y="80" width="32" height="32" fill="#0f172a" />
+                <rect x="14" y="86" width="20" height="20" fill="#ffffff" />
+                <rect x="18" y="90" width="12" height="12" fill="#0f172a" />
+
+                <!-- Random data modules -->
+                <rect x="48" y="12" width="8" height="8" fill="#0f172a" />
+                <rect x="62" y="12" width="8" height="8" fill="#0f172a" />
+                <rect x="48" y="28" width="16" height="8" fill="#0f172a" />
+                <rect x="48" y="48" width="24" height="24" fill="#2563eb" rx="2" />
+                <rect x="12" y="48" width="12" height="12" fill="#0f172a" />
+                <rect x="80" y="48" width="16" height="8" fill="#0f172a" />
+                <rect x="88" y="64" width="20" height="8" fill="#0f172a" />
+                <rect x="48" y="80" width="12" height="12" fill="#0f172a" />
+                <rect x="68" y="88" width="16" height="12" fill="#0f172a" />
+                <rect x="88" y="88" width="12" height="20" fill="#0f172a" />
+              </svg>
+            </div>
+
+            <div style="font-weight: 800; font-size: 1.15rem; color: var(--primary-900); margin-bottom: 2px;">
+              ${user.name}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--neutral-600); margin-bottom: 6px;">
+              Mission: <strong>${dep.eventTitle}</strong>
+            </div>
+            <div style="font-family: monospace; font-size: 0.78rem; color: #2563eb; font-weight: 800; background: #eff6ff; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+              PASS TOKEN: ${dep.qrCodeToken}
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.closeModal();">Close</button>
+            <button class="btn btn-primary" style="flex: 1;" onclick="window.SahayakApp.showToast('Attendance Pass QR saved to device storage.', 'success');">
+              🖨️ Save Pass Slip
+            </button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  function openAttendanceSlipModal() {
+    const dep = state.activeDeployment;
+    const user = state.currentUser;
+    const currentPhoto = dep.checkInPhoto || PHOTO_PRESETS.medical;
+
+    openModal(`
+      <div class="modal-window" style="max-width: 520px; text-align: center; border: 3px solid #059669;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #065f46, #047857); color: #fff;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span style="font-weight: 800; font-size: 1.05rem;">Official Attendance Verification Slip</span>
+          </div>
+          <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
+        </div>
+
+        <div class="modal-body" style="padding: 24px; background: #fff; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 14px;">
+            <div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #059669; letter-spacing: 0.05em;">Sahayak Field Telemetry</div>
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 900; color: #0f172a;">PROOF OF ATTENDANCE</h3>
+            </div>
+            <span class="badge badge-success" style="font-size: 0.75rem; font-weight: 800;">✓ VALIDATED</span>
+          </div>
+
+          <div style="display: flex; gap: 14px; align-items: center; background: #f8fafc; padding: 12px; border-radius: var(--radius-md); border: 1px solid #e2e8f0; margin-bottom: 14px;">
+            <img src="${currentPhoto}" alt="Verified Photo Proof" style="width: 56px; height: 56px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid #10b981;" />
+            <div style="font-size: 0.8rem; line-height: 1.4;">
+              <div style="font-weight: 800; color: #0f172a;">Volunteer: ${user.name}</div>
+              <div style="color: #475569;">Venue: ${dep.assignedLocation}</div>
+              <div style="color: #059669; font-weight: 700;">Check-In: ${dep.checkInTime || '04:02 PM'} (Live Verified)</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: #334155; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Mission Drive:</span>
+              <strong>${dep.eventTitle}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>NGO Supervisor:</span>
+              <strong>Dr. S. Mehta (Chief Medical Officer)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>GPS Geofence:</span>
+              <strong>19.1197° N, 72.8464° E (14m radius)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Verification Stamp Token:</span>
+              <strong style="font-family: monospace; color: #059669;">${dep.qrCodeToken}</strong>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary" style="flex: 1;" onclick="window.SahayakApp.closeModal();">Close</button>
+            <button class="btn btn-primary" style="flex: 1; background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.showToast('Attendance Slip PDF downloaded with official seal.', 'success');">
+              ⬇ Download Slip PDF
             </button>
           </div>
         </div>
@@ -2639,13 +2843,14 @@
     state.activeDeployment.checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     state.activeDeployment.checkInTimestamp = Date.now();
     state.activeDeployment.checkInPhoto = selectedPresetPhoto || PHOTO_PRESETS.medical;
+    state.activeDeployment.attendanceVerified = true;
 
     if (window.SahayakDB && window.SahayakDB.isConfigured()) {
       window.SahayakDB.saveDeployment(state.activeDeployment);
     }
 
     closeModal();
-    showToast('📸 Photo Proof Verified! Live Shift Stopwatch Started.', 'success');
+    showToast('📸 Attendance Proof Verified & Recorded! Shift Clock Started.', 'success');
     state.currentDemoStep = 7;
     renderApp();
   }
@@ -4609,6 +4814,8 @@
     checkInDeployment,
     checkOutDeployment,
     openLivePhotoClockInModal,
+    openAttendanceQrPassModal,
+    openAttendanceSlipModal,
     setPhotoPreset,
     handlePhotoFileUpload,
     triggerCameraSnapshot,
