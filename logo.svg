@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="100%" height="100%">
+  <!-- SAHAYAK LOGO: Rising Sun & Handshake with Brand Name -->
+  <defs>
+    <filter id="subtle-shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.08" />
+    </filter>
+  </defs>
+
+  <g transform="translate(10, 8)">
+    <!-- RISING SUN -->
+    <!-- Sun Rays -->
+    <g stroke="#EAA228" stroke-width="4.5" stroke-linecap="round">
+      <line x1="56" y1="12" x2="56" y2="2" />
+      <line x1="38" y1="18" x2="31" y2="10" />
+      <line x1="74" y1="18" x2="81" y2="10" />
+      <line x1="24" y1="31" x2="15" y2="27" />
+      <line x1="88" y1="31" x2="97" y2="27" />
+      <line x1="16" y1="48" x2="6" y2="48" />
+      <line x1="96" y1="48" x2="106" y2="48" />
+    </g>
+    <!-- Sun Dome -->
+    <path d="M 26 54 A 30 30 0 0 1 86 54 Z" fill="#EFA327" />
+
+    <!-- HANDSHAKE EMBLEM -->
+    <!-- Left Sleeve (Teal) -->
+    <path d="M 4 52 L 20 57 L 12 79 L -4 74 Z" fill="#3B8286" stroke="#1E293B" stroke-width="3.5" stroke-linejoin="round" />
+    
+    <!-- Right Sleeve (Navy) -->
+    <path d="M 108 52 L 92 57 L 100 79 L 116 74 Z" fill="#1E3A5F" stroke="#1E293B" stroke-width="3.5" stroke-linejoin="round" />
+
+    <!-- Left Hand (Base & Thumb) -->
+    <path d="M 18 58 C 24 54, 38 52, 54 58 C 64 62, 68 70, 62 76 C 58 80, 48 80, 40 76 L 36 78 C 32 82, 22 84, 15 76 Z" fill="#FCD3A1" stroke="#1E293B" stroke-width="3.5" stroke-linejoin="round" />
+
+    <!-- Right Hand (Wrapping Fingers) -->
+    <!-- Top Palm & Thumb clasp -->
+    <path d="M 94 58 C 88 54, 76 53, 62 60 C 52 65, 48 72, 54 78 C 60 84, 74 80, 82 76 L 90 75 Z" fill="#FDBA74" stroke="#1E293B" stroke-width="3.5" stroke-linejoin="round" />
+
+    <!-- Finger Knuckles & Detail Lines -->
+    <!-- Left Hand Fingers gripping right wrist -->
+    <path d="M 38 77 C 40 83, 46 87, 52 83 C 58 79, 56 74, 50 72" fill="#FCD3A1" stroke="#1E293B" stroke-width="3" stroke-linecap="round" />
+    <path d="M 46 83 C 48 89, 54 92, 60 88 C 65 84, 63 79, 58 76" fill="#FCD3A1" stroke="#1E293B" stroke-width="3" stroke-linecap="round" />
+    <path d="M 54 87 C 56 93, 62 96, 68 92 C 73 88, 71 83, 65 79" fill="#FCD3A1" stroke="#1E293B" stroke-width="3" stroke-linecap="round" />
+    <path d="M 62 90 C 64 96, 70 98, 76 94 C 80 90, 78 85, 73 82" fill="#FCD3A1" stroke="#1E293B" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Thumb overlap line -->
+    <path d="M 32 63 C 38 61, 48 64, 52 69" fill="none" stroke="#1E293B" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- SAHAYAK BRAND TEXT -->
+  <text x="140" y="78" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="48" font-weight="900" fill="#1E293B" letter-spacing="2">SAHAYAK</text>
+</svg>

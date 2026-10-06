@@ -7,7 +7,7 @@
   <meta name="description" content="Intelligent community volunteer coordination, smart skill-matching, and real-time deployment tracking platform for NGOs and volunteers.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2.5">
+  <link rel="stylesheet" href="styles.css?v=2.6">
 </head>
 <body>
 
@@ -21,22 +21,8 @@
       <header class="landing-navbar">
         <div class="landing-nav-container">
           <a href="#hero" class="brand-logo-lockup">
-            <div class="brand-icon-box">
-              <!-- Human & Community Help Shield Icon -->
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div class="brand-text-block">
-              <div class="brand-name-row">
-                <span class="brand-name">Sahayak</span>
-                <span class="brand-tag-pill">PORTAL</span>
-              </div>
-              <span class="brand-subtext">Connecting People. Mobilizing Impact.</span>
-            </div>
+            <img src="logo.svg" alt="Sahayak Logo" style="height: 44px; width: auto; max-width: 220px;" />
+            <span class="brand-tag-pill" style="margin-left: 4px;">PORTAL</span>
           </a>
 
           <nav class="landing-nav-links">
@@ -545,13 +531,7 @@
           <div class="footer-top-row">
             <div class="footer-brand">
               <div class="brand-logo-lockup">
-                <div class="brand-icon-box">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                </div>
-                <div>
-                  <span class="brand-name" style="font-size: 1.15rem;">Sahayak</span>
-                  <div style="font-size: 0.72rem; color: var(--neutral-500);">Community Volunteer Coordination Platform</div>
-                </div>
+                <img src="logo.svg" alt="Sahayak" style="height: 40px; width: auto; filter: brightness(0) invert(1);" />
               </div>
               <p class="footer-tagline-text">
                 "Connecting People. Mobilizing Impact." — Open-source civic technology for social impact.
@@ -599,19 +579,10 @@
 
       <!-- FIXED LEFT SIDEBAR -->
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-brand-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-          </div>
-          <div>
-            <div class="sidebar-brand-text">Sahayak</div>
-            <div style="font-size: 0.72rem; color: var(--neutral-400); font-weight: 600;">Connecting People • Impact</div>
-          </div>
+        <div class="sidebar-header" style="padding: 14px 18px;">
+          <a href="#" onclick="event.preventDefault(); window.SahayakApp.logout();" title="Return to Landing Page" style="display: flex; align-items: center;">
+            <img src="logo.svg" alt="Sahayak" style="height: 38px; width: auto;" />
+          </a>
         </div>
 
         <!-- Role Badge Indicator -->
@@ -699,10 +670,10 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- SCRIPTS WITH CACHE BUSTING -->
-  <script src="env.js?v=2.5"></script>
+  <script src="env.js?v=2.6"></script>
   <script src="supabase.min.js"></script>
-  <script src="data.js?v=2.5"></script>
-  <script src="supabase.js?v=2.5"></script>
-  <script src="app.js?v=2.5"></script>
+  <script src="data.js?v=2.6"></script>
+  <script src="supabase.js?v=2.6"></script>
+  <script src="app.js?v=2.6"></script>
 </body>
 </html>
