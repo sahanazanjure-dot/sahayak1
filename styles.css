@@ -2450,6 +2450,7 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1.15);
 }
 
+
 /* RESPONSIVE BREAKPOINTS */
 @media (max-width: 1080px) {
   .dashboard-grid, .profile-content-grid, .event-details-layout, .chart-card-grid, .deployment-action-card {
@@ -2481,7 +2482,7 @@ h1, h2, h3, h4, h5, h6 {
     display: none;
   }
   .sidebar {
-    display: none; /* In mobile we could toggle */
+    display: none;
   }
   .demo-stepper-bar {
     display: none;
@@ -2493,3 +2494,91 @@ h1, h2, h3, h4, h5, h6 {
     padding: 16px;
   }
 }
+
+/* ========================================================
+   ENHANCED DEPLOYMENT PAGE STYLES & RADAR
+======================================================== */
+.deployment-stage-selector-bar {
+  display: flex;
+  gap: 8px;
+  background: var(--neutral-100);
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-200);
+  margin-bottom: 24px;
+}
+
+.deployment-stage-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--neutral-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deployment-stage-btn:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--primary-900);
+}
+
+.deployment-stage-btn.active {
+  background: #ffffff;
+  color: var(--primary-900);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 800;
+  border: 1px solid var(--neutral-200);
+}
+
+.geofence-radar-box {
+  background: linear-gradient(135deg, #091322, #0d213f);
+  border: 1px solid #1e3a8a;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.radar-sweep-circle {
+  animation: radar-sweep 4s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.certificate-print-frame {
+  background: #fff;
+  border: 8px double #1e3a8a;
+  outline: 2px solid #d97706;
+  outline-offset: -12px;
+  padding: 36px 28px;
+  position: relative;
+  text-align: center;
+}
+
+.certificate-gold-seal {
+  width: 72px;
+  height: 72px;
+  background: radial-gradient(circle, #fef08a 0%, #d97706 70%, #92400e 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+  margin: 0 auto 14px auto;
+  border: 2px solid #fff;
+}
+

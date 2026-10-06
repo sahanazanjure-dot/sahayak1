@@ -1763,6 +1763,64 @@
 
   let selectedPresetPhoto = PHOTO_PRESETS.medical;
 
+  function setDeploymentStage(stage) {
+    state.activeDeployment.status = stage;
+    if (stage === 'MATCHED') {
+      state.activeDeployment.checkInTime = null;
+      state.activeDeployment.checkOutTime = null;
+      stopDeploymentTimer();
+      showToast('Shift reset to Stage 1: MATCHED (Ready to Punch-In).', 'primary');
+    } else if (stage === 'DEPLOYED') {
+      state.activeDeployment.checkInTime = state.activeDeployment.checkInTime || '04:02 PM';
+      state.activeDeployment.checkInTimestamp = state.activeDeployment.checkInTimestamp || (Date.now() - (4 * 3600 + 3 * 60 + 12) * 1000);
+      state.activeDeployment.checkInPhoto = state.activeDeployment.checkInPhoto || PHOTO_PRESETS.medical;
+      startDeploymentTimer();
+      showToast('Shift switched to Stage 2: DEPLOYED (Live Stopwatch & Tasks Active).', 'success');
+    } else if (stage === 'COMPLETED') {
+      state.activeDeployment.checkInTime = state.activeDeployment.checkInTime || '04:02 PM';
+      state.activeDeployment.checkOutTime = state.activeDeployment.checkOutTime || '08:05 PM';
+      state.activeDeployment.checkInPhoto = state.activeDeployment.checkInPhoto || PHOTO_PRESETS.medical;
+      stopDeploymentTimer();
+      showToast('Shift switched to Stage 3: COMPLETED (Certificate & Verified Hours Ready).', 'success');
+    }
+    if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+      window.SahayakDB.saveDeployment(state.activeDeployment);
+    }
+    renderApp();
+  }
+
+  function switchDeploymentDrive(oppId) {
+    const opp = state.opportunities.find(o => o.id === oppId);
+    if (!opp) return;
+    state.activeDeployment.eventId = opp.id;
+    state.activeDeployment.eventTitle = opp.title;
+    state.activeDeployment.organization = opp.organization;
+    state.activeDeployment.assignedLocation = opp.location;
+    state.activeDeployment.shiftTime = opp.shiftTime;
+    state.activeDeployment.shiftHours = opp.hours || 4;
+    state.activeDeployment.qrCodeToken = `SHK-2026-${opp.id.toUpperCase()}-SECTOR`;
+    showToast(`Switched active deployment drive to: ${opp.title}`, 'primary');
+    renderApp();
+  }
+
+  function addNewShiftTask() {
+    const taskText = prompt('Enter description for new field task:');
+    if (!taskText || !taskText.trim()) return;
+    if (!state.activeDeployment.tasks) {
+      state.activeDeployment.tasks = [];
+    }
+    state.activeDeployment.tasks.push({
+      id: `task-${Date.now()}`,
+      text: taskText.trim(),
+      done: false
+    });
+    if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+      window.SahayakDB.saveDeployment(state.activeDeployment);
+    }
+    showToast('New field task added to shift checklist.', 'success');
+    renderApp();
+  }
+
   function renderDeploymentTrackingPage() {
     const dep = state.activeDeployment;
 
@@ -1773,23 +1831,30 @@
       stopDeploymentTimer();
     }
 
-    // Determine stepper stages
+    // Stepper line calculations
     const isMatched = dep.status === 'MATCHED' || dep.status === 'DEPLOYED' || dep.status === 'COMPLETED';
     const isDeployed = dep.status === 'DEPLOYED' || dep.status === 'COMPLETED';
     const isCompleted = dep.status === 'COMPLETED';
 
-    let progressLineWidth = '0%';
-    if (dep.status === 'MATCHED') progressLineWidth = '33%';
-    else if (dep.status === 'DEPLOYED') progressLineWidth = '66%';
+    let progressLineWidth = '33%';
+    if (dep.status === 'DEPLOYED') progressLineWidth = '66%';
     else if (dep.status === 'COMPLETED') progressLineWidth = '100%';
 
     const currentPhoto = dep.checkInPhoto || PHOTO_PRESETS.medical;
+    const tasks = dep.tasks || [
+      { id: 't1', text: 'On-site arrival & safety gear equipped', done: true },
+      { id: 't2', text: 'Triage briefing with Dr. S. Mehta', done: true },
+      { id: 't3', text: 'Patient vitals recording & token intake', done: false },
+      { id: 't4', text: 'First aid medicine kit distribution', done: false }
+    ];
+    const completedTasksCount = tasks.filter(t => t.done).length;
+    const taskPercent = Math.round((completedTasksCount / Math.max(1, tasks.length)) * 100);
 
     return `
       <div class="deployment-container">
         
-        <!-- OPERATIONS CONSOLE TOP BANNER -->
-        <section class="welcome-hero" style="background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f766e 100%); color: var(--white); margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.35);">
+        <!-- 1. OPERATIONS CONSOLE TOP BANNER -->
+        <section class="welcome-hero" style="background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f766e 100%); color: var(--white); margin-bottom: 20px; box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.35);">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
               <span class="badge" style="background: rgba(255,255,255,0.2); color: var(--white); font-weight: 800; font-size: 0.76rem; letter-spacing: 0.05em;">
@@ -1805,43 +1870,68 @@
             <span class="status-badge-giant ${dep.status.toLowerCase()}" style="font-size: 0.88rem; padding: 8px 18px;">
               ● ${dep.status === 'DEPLOYED' ? 'LIVE ON-DUTY SHIFT' : dep.status === 'MATCHED' ? 'READY TO CLOCK IN' : 'SHIFT COMPLETED'}
             </span>
-            <span style="color: #d1fae5; font-size: 0.75rem;">Supervised by ${dep.organization}</span>
+            <span style="color: #d1fae5; font-size: 0.75rem;">Supervised by <strong>${dep.organization}</strong></span>
           </div>
         </section>
 
-        <!-- HORIZONTAL STEP TRACKER CARD -->
+        <!-- 2. LIFECYCLE STAGE SWITCHER / SIMULATOR (EASY DEMO & TESTING CONTROLLER) -->
+        <div class="deployment-stage-selector-bar">
+          <button class="deployment-stage-btn ${dep.status === 'MATCHED' ? 'active' : ''}" onclick="window.SahayakApp.setDeploymentStage('MATCHED');">
+            <span>📍 Stage 1: Matched / Ready to Punch In</span>
+          </button>
+          <button class="deployment-stage-btn ${dep.status === 'DEPLOYED' ? 'active' : ''}" onclick="window.SahayakApp.setDeploymentStage('DEPLOYED');">
+            <span>⏱️ Stage 2: Deployed / Active Shift &amp; Stopwatch</span>
+          </button>
+          <button class="deployment-stage-btn ${dep.status === 'COMPLETED' ? 'active' : ''}" onclick="window.SahayakApp.setDeploymentStage('COMPLETED');">
+            <span>🏅 Stage 3: Completed / Certificate &amp; Record</span>
+          </button>
+        </div>
+
+        <!-- 3. HORIZONTAL 4-STEP TRACKER CARD -->
         <div class="deployment-header-card" style="padding: 20px 24px; margin-bottom: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--neutral-500); letter-spacing: 0.05em;">
-              4-Stage Deployment Progress
-            </span>
-            <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary-800);">
-              Current Stage: <strong>${dep.status}</strong>
-            </span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--neutral-500); letter-spacing: 0.05em;">
+                4-Stage Deployment Progress
+              </span>
+              <div style="font-size: 0.76rem; color: var(--neutral-500); margin-top: 2px;">
+                Lifecycle: POSTED → MATCHED → DEPLOYED (PUNCH-IN) → COMPLETED (CERTIFICATE)
+              </div>
+            </div>
+            
+            <!-- Drive Switcher Dropdown -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.76rem; color: var(--neutral-600); font-weight: 700;">Active Drive:</span>
+              <select class="form-input" style="padding: 4px 10px; font-size: 0.78rem; width: auto; font-weight: 700;" onchange="window.SahayakApp.switchDeploymentDrive(this.value);">
+                ${state.opportunities.map(opp => `
+                  <option value="${opp.id}" ${opp.id === dep.eventId ? 'selected' : ''}>${opp.title} (${opp.organization})</option>
+                `).join('')}
+              </select>
+            </div>
           </div>
 
-          <!-- HORIZONTAL STEP TRACKER: POSTED → MATCHED → DEPLOYED → COMPLETED -->
-          <div class="progress-stepper-horizontal" style="margin: 20px 0 10px 0;">
+          <!-- HORIZONTAL STEP TRACKER -->
+          <div class="progress-stepper-horizontal" style="margin: 24px 0 10px 0;">
             <div class="stepper-active-line" style="width: ${progressLineWidth};"></div>
 
             <!-- Step 1: POSTED -->
             <div class="step-node completed">
               <div class="step-circle">✓</div>
               <span class="step-label">POSTED</span>
-              <span style="font-size: 0.7rem; color: var(--neutral-400);">Oct 4, 10:00 AM</span>
+              <span style="font-size: 0.7rem; color: var(--neutral-400);">Drive Active</span>
             </div>
 
             <!-- Step 2: MATCHED -->
             <div class="step-node ${isMatched ? (dep.status === 'MATCHED' ? 'current' : 'completed') : ''}">
               <div class="step-circle">${isDeployed ? '✓' : '2'}</div>
               <span class="step-label">MATCHED</span>
-              <span style="font-size: 0.7rem; color: var(--neutral-400);">92% Match Score</span>
+              <span style="font-size: 0.7rem; color: var(--neutral-400);">92% AI Score</span>
             </div>
 
             <!-- Step 3: DEPLOYED -->
             <div class="step-node ${isDeployed ? (dep.status === 'DEPLOYED' ? 'current' : 'completed') : ''}">
               <div class="step-circle">${isCompleted ? '✓' : '⏱️'}</div>
-              <span class="step-label">CLOCK IN</span>
+              <span class="step-label">PUNCH IN</span>
               <span style="font-size: 0.7rem; color: var(--neutral-400);">${dep.checkInTime || 'Photo Clock-In'}</span>
             </div>
 
@@ -1849,15 +1939,15 @@
             <div class="step-node ${isCompleted ? 'completed current' : ''}">
               <div class="step-circle">${isCompleted ? '★' : '🏁'}</div>
               <span class="step-label">COMPLETED</span>
-              <span style="font-size: 0.7rem; color: var(--neutral-400);">${dep.checkOutTime || 'Clock Out'}</span>
+              <span style="font-size: 0.7rem; color: var(--neutral-400);">${dep.checkOutTime || 'Certificate'}</span>
             </div>
           </div>
         </div>
 
-        <!-- MAIN DEPLOYMENT ACTION & DETAILS CARD -->
-        <div class="deployment-action-card">
+        <!-- 4. MAIN DEPLOYMENT ACTION & DETAILS 2-COLUMN GRID -->
+        <div class="deployment-action-card" style="margin-bottom: 24px;">
           
-          <!-- LEFT: LIVE STOPWATCH, PHOTO PROOF & TIME CONTROLLER -->
+          <!-- LEFT COLUMN: LIVE TELEMETRY / STOPWATCH / PHOTO PROOF -->
           <div class="deployment-status-hero">
             <div>
               <div style="font-size: 0.76rem; text-transform: uppercase; font-weight: 800; color: var(--primary-700); letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
@@ -1873,37 +1963,57 @@
                   'Your 4.0 volunteer hours have been verified and credited to your permanent Sahayak record.'}
               </p>
 
-              <!-- STATE 1: MATCHED (AWAITING PHOTO CLOCK-IN) -->
+              <!-- STATE 1: MATCHED (GEOFENCE RADAR & READY TO CLOCK IN) -->
               ${dep.status === 'MATCHED' ? `
-                <div style="background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem;">
-                    <span style="font-weight: 700; color: var(--neutral-700); display: flex; align-items: center; gap: 6px;">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                      Live GPS Geofence Check
-                    </span>
-                    <span class="badge badge-success" style="font-size: 0.72rem;">
-                      📍 18m Away (Inside 50m Zone)
+                <div class="geofence-radar-box">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="pulse-green-dot"></span>
+                      <strong style="font-size: 0.88rem; color: #a7f3d0;">Live GPS Geofence Radar</strong>
+                    </div>
+                    <span class="badge badge-success" style="font-size: 0.72rem; padding: 4px 10px;">
+                      📍 14m Away (Inside 50m Zone)
                     </span>
                   </div>
-                  
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
-                    <div style="padding: 10px; background: #fff; border-radius: var(--radius-sm); border: 1px solid var(--neutral-200);">
-                      <div style="font-size: 0.7rem; color: var(--neutral-400); text-transform: uppercase;">Verification Mode</div>
-                      <div style="font-weight: 800; color: var(--primary-900); margin-top: 2px;">
-                        📸 Live Photo Proof
-                      </div>
+
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 84px; height: 84px; position: relative; flex-shrink: 0;">
+                      <svg width="84" height="84" viewBox="0 0 84 84">
+                        <circle cx="42" cy="42" r="40" fill="none" stroke="#1e3a8a" stroke-width="1.5" />
+                        <circle cx="42" cy="42" r="26" fill="none" stroke="#2563eb" stroke-width="1" stroke-dasharray="3 3" />
+                        <circle cx="42" cy="42" r="12" fill="none" stroke="#10b981" stroke-width="1.5" />
+                        <line x1="42" y1="2" x2="42" y2="82" stroke="#1e3a8a" stroke-width="1" />
+                        <line x1="2" y1="42" x2="82" y2="42" stroke="#1e3a8a" stroke-width="1" />
+                        <g class="radar-sweep-circle">
+                          <polygon points="42,42 42,2 82,42" fill="url(#radar-grad)" opacity="0.3" />
+                        </g>
+                        <!-- Volunteer Position Dot -->
+                        <circle cx="48" cy="38" r="4" fill="#10b981">
+                          <animate attributeName="r" values="3;6;3" dur="1.5s" repeatCount="indefinite" />
+                        </circle>
+                        <defs>
+                          <radialGradient id="radar-grad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.8"/>
+                            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                          </radialGradient>
+                        </defs>
+                      </svg>
                     </div>
-                    <div style="padding: 10px; background: #fff; border-radius: var(--radius-sm); border: 1px solid var(--neutral-200);">
-                      <div style="font-size: 0.7rem; color: var(--neutral-400); text-transform: uppercase;">Assigned Station</div>
-                      <div style="font-weight: 800; color: var(--primary-900); margin-top: 2px;">
-                        Room 3 • Triage Desk
+
+                    <div style="font-size: 0.82rem; line-height: 1.5; color: #cbd5e1;">
+                      <div style="font-weight: 700; color: #fff;">Muster Coordinates: 19.1197° N, 72.8464° E</div>
+                      <div style="font-size: 0.76rem; color: #94a3b8;">Venue: ${dep.assignedLocation}</div>
+                      <div style="margin-top: 6px; display: flex; gap: 6px;">
+                        <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.72rem; padding: 2px 8px; color: #93c5fd; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);" onclick="window.SahayakApp.showToast('Simulating GPS Telemetry Ping: Signal Accuracy 99.8%', 'success');">
+                          📡 Ping GPS Signal
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               ` : ''}
 
-              <!-- STATE 2: DEPLOYED (LIVE STOPWATCH & PHOTO THUMBNAIL) -->
+              <!-- STATE 2: DEPLOYED (LIVE STOPWATCH, EXPANDABLE PHOTO & TASK PROGRESS) -->
               ${dep.status === 'DEPLOYED' ? `
                 <div class="live-stopwatch-box">
                   <div class="stopwatch-header-row">
@@ -1937,7 +2047,7 @@
                   </div>
 
                   <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #cbd5e1; padding-top: 4px;">
-                    <span>Target Shift: <strong>4.0 Hours</strong></span>
+                    <span>Target Shift: <strong>${dep.shiftHours} Hours</strong></span>
                     <span style="color: #6ee7b7; font-weight: 700;">● Recording Active</span>
                   </div>
                 </div>
@@ -1961,23 +2071,30 @@
                     </button>
                   </div>
 
-                  <!-- LIVE FIELD TASKS CHECKLIST -->
-                  <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: var(--neutral-500); margin-bottom: 8px;">
-                    Shift Tasks Log (${dep.tasks ? dep.tasks.filter(t => t.done).length : 2} / ${dep.tasks ? dep.tasks.length : 4} Completed)
+                  <!-- LIVE FIELD TASKS PROGRESS BAR -->
+                  <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 800; text-transform: uppercase; color: var(--neutral-600); margin-bottom: 4px;">
+                      <span>Shift Tasks: ${completedTasksCount} / ${tasks.length} Completed</span>
+                      <span style="color: var(--primary-800);">${taskPercent}%</span>
+                    </div>
+                    <div style="height: 6px; background: var(--neutral-200); border-radius: 999px; overflow: hidden;">
+                      <div style="width: ${taskPercent}%; height: 100%; background: linear-gradient(90deg, #2563eb, #10b981); border-radius: 999px; transition: width 0.3s ease;"></div>
+                    </div>
                   </div>
-                  <div style="display: flex; flex-direction: column; gap: 6px;">
-                    ${(dep.tasks || [
-                      { id: 't1', text: 'On-site arrival & safety gear equipped', done: true },
-                      { id: 't2', text: 'Triage briefing with Dr. S. Mehta', done: true },
-                      { id: 't3', text: 'Patient vitals recording & token intake', done: false },
-                      { id: 't4', text: 'First aid medicine kit distribution', done: false }
-                    ]).map(t => `
+
+                  <!-- LIVE FIELD TASKS CHECKLIST -->
+                  <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                    ${tasks.map(t => `
                       <div class="shift-task-item ${t.done ? 'checked' : ''}" onclick="window.SahayakApp.toggleShiftTask('${t.id}');">
                         <input type="checkbox" ${t.done ? 'checked' : ''} style="cursor: pointer;" onclick="event.stopPropagation(); window.SahayakApp.toggleShiftTask('${t.id}');" />
                         <span class="task-label-text">${t.text}</span>
                       </div>
                     `).join('')}
                   </div>
+
+                  <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.74rem; width: 100%; justify-content: center;" onclick="window.SahayakApp.addNewShiftTask();">
+                    + Add New Shift Note / Task
+                  </button>
                 </div>
               ` : ''}
 
@@ -1997,13 +2114,13 @@
                       <div style="font-weight: 800; font-size: 1.1rem; color: var(--primary-900); margin-top: 2px; display: flex; align-items: center; gap: 6px;">
                         🏁 ${dep.checkOutTime || '08:05 PM'}
                       </div>
-                      <div style="font-size: 0.7rem; color: var(--primary-700); font-weight: 600; margin-top: 4px;">4.0 Hours Verified</div>
+                      <div style="font-size: 0.7rem; color: var(--primary-700); font-weight: 600; margin-top: 4px;">${dep.shiftHours}.0 Hours Verified</div>
                     </div>
                   </div>
 
                   <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-sm);">
                     <span style="font-size: 0.85rem; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
-                      ✓ Service Verified • 4 Hours Credited
+                      ✓ Service Verified • ${dep.shiftHours} Hours Credited
                     </span>
                     <button class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 8px;" onclick="window.SahayakApp.openShiftDebriefViewModal();">
                       View Task Summary
@@ -2044,30 +2161,35 @@
                 </div>
               ` : ''}
 
-              <button class="btn btn-sm btn-outline-danger" onclick="window.SahayakApp.showToast('Emergency SOS signal dispatched to Dr. S. Mehta and BMC Control!', 'danger');">
+              <button class="btn btn-sm btn-outline-danger" onclick="window.SahayakApp.showToast('Emergency SOS signal dispatched to ${dep.emergencyContact.name} and Disaster Control!', 'danger');">
                 🚨 SOS / Trigger Emergency Assistance
               </button>
             </div>
           </div>
 
-          <!-- RIGHT: ASSIGNED DETAILS & TEAM ROSTER -->
+          <!-- RIGHT COLUMN: ASSIGNED DETAILS & TEAM ROSTER -->
           <div>
-            <h4 style="font-weight: 800; font-size: 1.1rem; color: var(--primary-900); margin-bottom: 14px;">
-              Deployment Specification
+            <h4 style="font-weight: 800; font-size: 1.1rem; color: var(--primary-900); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+              <span>Deployment Specification</span>
+              <span class="badge badge-primary" style="font-size: 0.72rem;">Live Roster</span>
             </h4>
 
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-100);">
-                <span style="color: var(--neutral-500);">Assigned Location:</span>
-                <span style="font-weight: 700; color: var(--neutral-800); text-align: right;">${dep.assignedLocation}</span>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: var(--neutral-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--neutral-200);">
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-200);">
+                <span style="color: var(--neutral-500);">Assigned Station:</span>
+                <span style="font-weight: 700; color: var(--neutral-900); text-align: right; max-width: 65%;">${dep.assignedLocation}</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-100);">
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-200);">
                 <span style="color: var(--neutral-500);">Shift Schedule:</span>
-                <span style="font-weight: 700; color: var(--neutral-800);">${dep.shiftTime} (${dep.shiftHours} hrs)</span>
+                <span style="font-weight: 700; color: var(--neutral-900);">${dep.shiftTime} (${dep.shiftHours} hrs)</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-100);">
-                <span style="color: var(--neutral-500);">Supervisor Contact:</span>
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-200);">
+                <span style="color: var(--neutral-500);">Lead Supervisor:</span>
                 <span style="font-weight: 700; color: var(--primary-800);">${dep.emergencyContact.name} (${dep.emergencyContact.phone})</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem;">
+                <span style="color: var(--neutral-500);">Verification QR:</span>
+                <span style="font-family: monospace; font-size: 0.8rem; color: var(--neutral-700);">${dep.qrCodeToken}</span>
               </div>
             </div>
 
@@ -2076,7 +2198,7 @@
               Assigned Team Members (${dep.teamMembers.length})
             </h5>
 
-            <div class="team-roster-list">
+            <div class="team-roster-list" style="margin-bottom: 20px;">
               ${dep.teamMembers.map(member => `
                 <div class="team-member-row">
                   <div class="team-member-info">
@@ -2090,12 +2212,89 @@
                       <div style="font-size: 0.74rem; color: var(--neutral-500);">${member.skill}</div>
                     </div>
                   </div>
-                  <span class="badge badge-success" style="font-size: 0.7rem;">Ready</span>
+                  <span class="badge badge-success" style="font-size: 0.7rem;">On-Duty</span>
                 </div>
               `).join('')}
             </div>
+
+            <!-- QUICK ACTIONS -->
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-sm btn-secondary" style="flex: 1;" onclick="window.SahayakApp.showToast('Opening Google Maps navigation to: ' + state.activeDeployment.assignedLocation, 'primary');">
+                📍 Get Directions
+              </button>
+              <button class="btn btn-sm btn-secondary" style="flex: 1;" onclick="window.SahayakApp.showToast('Calling supervisor: ' + state.activeDeployment.emergencyContact.phone, 'primary');">
+                📞 Call Supervisor
+              </button>
+            </div>
+
           </div>
 
+        </div>
+
+        <!-- 5. VERIFIED DEPLOYMENT RECORD BOOK & RECENT SHIFT HISTORY -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header" style="margin-bottom: 14px;">
+            <div>
+              <h4 style="font-weight: 800; font-size: 1.1rem; color: var(--primary-900); margin-bottom: 2px;">
+                Verified Deployment History &amp; Service Log
+              </h4>
+              <p style="font-size: 0.8rem; color: var(--neutral-500);">Permanent record of all on-ground verified shifts and earned certificate tokens.</p>
+            </div>
+            <span class="badge badge-success" style="font-weight: 700;">100% Reliability Score</span>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Event / Mission</th>
+                  <th>NGO Organization</th>
+                  <th>Shift Date</th>
+                  <th>Hours</th>
+                  <th>Verified Mode</th>
+                  <th>Certificate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>${dep.eventTitle}</strong></td>
+                  <td>${dep.organization}</td>
+                  <td>Today, Oct 5</td>
+                  <td><span class="badge badge-primary">${dep.shiftHours}.0 Hrs</span></td>
+                  <td><span class="badge badge-success">✓ Photo &amp; GPS</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" style="font-size: 0.72rem; padding: 2px 8px;" onclick="window.SahayakApp.openServiceCertificate();">
+                      🏅 View Cert
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Flood Relief &amp; Emergency Supply</strong></td>
+                  <td>Seva Bharat Relief</td>
+                  <td>Oct 2, 2026</td>
+                  <td><span class="badge badge-primary">6.0 Hrs</span></td>
+                  <td><span class="badge badge-success">✓ Photo &amp; GPS</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" style="font-size: 0.72rem; padding: 2px 8px;" onclick="window.SahayakApp.openServiceCertificate();">
+                      🏅 View Cert
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Mega Health &amp; Blood Donation Drive</strong></td>
+                  <td>Red Cross Mumbai</td>
+                  <td>Sep 28, 2026</td>
+                  <td><span class="badge badge-primary">5.0 Hrs</span></td>
+                  <td><span class="badge badge-success">✓ Photo &amp; GPS</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" style="font-size: 0.72rem; padding: 2px 8px;" onclick="window.SahayakApp.openServiceCertificate();">
+                      🏅 View Cert
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -4252,6 +4451,9 @@
     toggleShiftTask,
     openServiceCertificate,
     openTelemetryAuditModal,
+    setDeploymentStage,
+    switchDeploymentDrive,
+    addNewShiftTask,
     openEditProfileModal,
     saveProfileChanges,
     openEmergencyBroadcastModal,
