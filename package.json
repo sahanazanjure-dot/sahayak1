@@ -1,0 +1,12 @@
+{
+  "name": "sahayak",
+  "version": "1.0.0",
+  "description": "Sahayak — Community Volunteer Coordination Platform",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve ."
+  },
+  "keywords": ["volunteer", "coordination", "community", "ngo"],
+  "author": "",
+  "license": "MIT"
+}
