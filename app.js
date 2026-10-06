@@ -1038,12 +1038,15 @@
                       </div>
                     ` : ''}
 
-                    <div style="display: flex; gap: 8px;">
-                      <button type="button" class="btn btn-sm btn-primary" style="flex: 1; font-weight: 800; font-size: 0.8rem; justify-content: center; padding: 8px 12px; cursor: pointer; background: #1e40af; border-color: #1e40af;" onclick="event.stopPropagation(); window.SahayakApp.startScheduledTask('${task.id || task.eventId || 'opp-med-01'}');">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                      <button type="button" class="btn btn-sm btn-primary" style="flex: 2; min-width: 140px; font-weight: 800; font-size: 0.8rem; justify-content: center; padding: 8px 12px; cursor: pointer; background: #1e40af; border-color: #1e40af;" onclick="event.stopPropagation(); window.SahayakApp.startScheduledTask('${task.id || task.eventId || 'opp-med-01'}');">
                         🚀 Open Deployment →
                       </button>
-                      <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; padding: 8px 14px; cursor: pointer;" onclick="event.stopPropagation(); window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId || 'opp-med-01'}' });">
+                      <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; padding: 8px 12px; cursor: pointer;" onclick="event.stopPropagation(); window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId || 'opp-med-01'}' });">
                         Details
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.78rem; padding: 8px 10px; cursor: pointer; font-weight: 700;" onclick="event.stopPropagation(); window.SahayakApp.cancelScheduledTask('${task.id || task.eventId}');" title="Cancel this scheduled activity">
+                        ✕ Cancel
                       </button>
                     </div>
                   </div>
@@ -1440,12 +1443,15 @@
                 <div style="font-size: 0.8rem; color: var(--primary-800); font-weight: 700; margin-bottom: 12px;">
                   🕐 ${task.shiftTime} (${task.hours || 4} hrs)
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: auto;">
-                  <button class="btn btn-sm btn-primary" style="flex: 1;" onclick="window.SahayakApp.startScheduledTask('${task.id || task.eventId}');">
+                <div style="display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap;">
+                  <button class="btn btn-sm btn-primary" style="flex: 2; min-width: 130px;" onclick="window.SahayakApp.startScheduledTask('${task.id || task.eventId}');">
                     🚀 Start Shift Tracker
                   </button>
                   <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${task.id || task.eventId}' });">
                     View Brief
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" style="font-weight: 700;" onclick="window.SahayakApp.cancelScheduledTask('${task.id || task.eventId}');" title="Cancel scheduled shift">
+                    ✕ Cancel
                   </button>
                 </div>
               </div>
@@ -1846,6 +1852,9 @@
                 <button class="btn btn-primary btn-lg" style="background: #1e40af; border-color: #1e40af; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${topMatch.id}');">
                   🚀 In Scheduled Tasks (Open Deployment) →
                 </button>
+                <button class="btn btn-outline-danger btn-lg" style="font-weight: 700;" onclick="window.SahayakApp.cancelScheduledTask('${topMatch.id}');">
+                  ✕ Cancel Commitment
+                </button>
               ` : `
                 <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #4338ca, #6366f1); border: none; font-weight: 800; box-shadow: 0 4px 14px rgba(79,70,229,0.4);" onclick="window.SahayakApp.acceptOpportunity('${topMatch.id}');">
                   ⚡ Accept AI Match &amp; Add to Schedule →
@@ -1962,6 +1971,9 @@
                   <button class="btn btn-sm btn-primary" style="flex: 1; background: #1e40af; border-color: #1e40af;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
                     🚀 Scheduled
                   </button>
+                  <button class="btn btn-sm btn-outline-danger" style="font-weight: 700; padding: 6px 10px;" onclick="window.SahayakApp.cancelScheduledTask('${opp.id}');" title="Cancel commitment">
+                    ✕
+                  </button>
                 ` : `
                   <button class="btn btn-sm btn-primary" style="flex: 1; background: #4f46e5; border: none; font-weight: 800;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
                     ⚡ Accept Match
@@ -2068,10 +2080,13 @@
             </div>
 
             <!-- BUTTONS -->
-            <div style="display: flex; gap: 16px; padding-top: 20px; border-top: 1px solid var(--neutral-200);">
+            <div style="display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid var(--neutral-200); flex-wrap: wrap;">
               ${(state.scheduledTasks || []).some(t => t.id === opp.id || t.eventId === opp.id) ? `
-                <button class="btn btn-primary btn-lg" style="flex: 1; background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
+                <button class="btn btn-primary btn-lg" style="flex: 2; min-width: 220px; background: #059669; border-color: #059669; font-weight: 800;" onclick="window.SahayakApp.startScheduledTask('${opp.id}');">
                   🚀 In Scheduled Tasks (Open Deployment) →
+                </button>
+                <button class="btn btn-outline-danger btn-lg" style="flex: 1; min-width: 150px; font-weight: 700;" onclick="window.SahayakApp.cancelScheduledTask('${opp.id}');">
+                  ✕ Cancel Commitment
                 </button>
               ` : `
                 <button class="btn btn-primary btn-lg" style="flex: 1; font-weight: 800;" onclick="window.SahayakApp.acceptOpportunity('${opp.id}');">
@@ -2716,6 +2731,9 @@
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                   📸 Punch In with Live Photo Proof →
                 </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" style="padding: 8px 14px; font-weight: 700;" onclick="window.SahayakApp.cancelScheduledTask('${dep.eventId}');">
+                  ✕ Cancel This Scheduled Activity
+                </button>
               ` : ''}
 
               ${dep.status === 'DEPLOYED' ? `
@@ -2985,6 +3003,89 @@
     renderApp();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast('🚀 Opening Deployment Tracker for: ' + (state.activeDeployment.eventTitle || 'Mission'), 'primary');
+  }
+
+  function cancelScheduledTask(taskId) {
+    if (!taskId) return;
+    const taskIdx = (state.scheduledTasks || []).findIndex(t => t.id === taskId || t.eventId === taskId);
+    const task = taskIdx >= 0 ? state.scheduledTasks[taskIdx] : null;
+    const opp = (state.opportunities || []).find(o => o.id === taskId || o.id === (task?.eventId));
+    const taskTitle = task ? task.title : (opp ? opp.title : 'Scheduled Activity');
+
+    if (!confirm(`Are you sure you want to cancel your scheduled commitment for "${taskTitle}"?\n\nThis will release your reserved volunteer slot so another volunteer can step in.`)) {
+      return;
+    }
+
+    if (taskIdx >= 0) {
+      state.scheduledTasks.splice(taskIdx, 1);
+    }
+
+    // Decrement matched count on opportunity if greater than 0
+    if (opp && opp.volunteersMatched > 0) {
+      opp.volunteersMatched -= 1;
+    }
+
+    // If active deployment matches this event and is not completed, reset or switch
+    if (state.activeDeployment && (state.activeDeployment.eventId === taskId || state.activeDeployment.eventId === (task?.eventId) || state.activeDeployment.eventId === (opp?.id))) {
+      if (state.activeDeployment.status !== 'COMPLETED') {
+        stopDeploymentTimer();
+        if (state.scheduledTasks && state.scheduledTasks.length > 0) {
+          const nextTask = state.scheduledTasks[0];
+          state.activeDeployment = {
+            eventId: nextTask.eventId || nextTask.id,
+            eventTitle: nextTask.title,
+            organization: nextTask.organization,
+            status: nextTask.status || 'MATCHED',
+            assignedLocation: nextTask.location || 'Community Hub',
+            shiftTime: nextTask.shiftTime || '4:00 PM – 8:00 PM',
+            shiftHours: nextTask.hours || 4,
+            date: nextTask.date || 'Today',
+            checkInTime: null,
+            checkOutTime: null,
+            checkInPhoto: null,
+            checkInTimestamp: null,
+            checkOutPhoto: null,
+            checkOutSummary: '',
+            shiftRating: 5,
+            tasks: [],
+            emergencyContact: nextTask.emergencyContact || null,
+            teamMembers: [],
+            qrCodeToken: `SHK-2026-${(nextTask.eventId || nextTask.id || 'GEN').toUpperCase()}`,
+            notes: ''
+          };
+        } else {
+          state.activeDeployment = {
+            eventId: null,
+            eventTitle: null,
+            organization: null,
+            status: 'IDLE',
+            assignedLocation: null,
+            shiftTime: null,
+            shiftHours: 0,
+            date: null,
+            checkInTime: null,
+            checkOutTime: null,
+            checkInPhoto: null,
+            checkInTimestamp: null,
+            checkOutPhoto: null,
+            checkOutSummary: '',
+            shiftRating: 5,
+            tasks: [],
+            emergencyContact: null,
+            teamMembers: [],
+            qrCodeToken: null,
+            notes: ''
+          };
+        }
+      }
+    }
+
+    if (window.SahayakDB && window.SahayakDB.isConfigured()) {
+      window.SahayakDB.saveDeployment(state.activeDeployment);
+    }
+
+    renderApp();
+    showToast(`⚠️ Commitment for "${taskTitle}" has been cancelled and slot released.`, 'neutral');
   }
 
   function markAttendanceVerified(eventId) {
@@ -5547,6 +5648,7 @@
     closeModal,
     acceptOpportunity,
     startScheduledTask,
+    cancelScheduledTask,
     checkInDeployment,
     checkOutDeployment,
     openLivePhotoClockInModal,
