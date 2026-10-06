@@ -181,6 +181,16 @@
     }
   }
 
+  function calculateReliabilityScore(completedCount) {
+    const count = parseInt(completedCount) || 0;
+    if (count <= 0) return 0;
+    if (count === 1) return 60;
+    if (count === 2) return 80;
+    if (count === 3) return 90;
+    if (count === 4) return 95;
+    return Math.min(100, 95 + Math.min(5, count - 4));
+  }
+
   function applyUserData(displayName, email, role, extra = {}) {
     const rawName = displayName || (email ? email.split('@')[0] : 'Volunteer');
     const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
@@ -223,8 +233,9 @@
         state.scheduledTasks = JSON.parse(JSON.stringify(INITIAL_DATA.scheduledTasks || []));
         state.activeDeployment = JSON.parse(JSON.stringify(INITIAL_DATA.activeDeployment));
       } else {
-        // Brand new Volunteer: Initialize with clean zero-data state!
+        // Brand new Volunteer: Initialize with clean zero-data state (reliability: 0%)!
         const initials = formattedName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'VO';
+        const completedDrives = parseInt(extra.completedEvents) || 0;
         state.currentUser = {
           id: extra.id || `vol-${Date.now()}`,
           name: formattedName,
@@ -238,15 +249,15 @@
           skills: extra.skills || [],
           certifications: [],
           availability: extra.availability || 'Weekends & Evenings',
-          experience: extra.experience || 'New Member',
+          experience: extra.experience || '0 Months (New Member)',
           languages: extra.languages || ['English', 'Hindi'],
-          reliabilityScore: 100,
-          completedEvents: 0,
-          totalVolunteerHours: 0,
+          reliabilityScore: calculateReliabilityScore(completedDrives),
+          completedEvents: completedDrives,
+          totalVolunteerHours: parseInt(extra.totalVolunteerHours) || 0,
           supervisorRating: 5.0,
-          onTimeRate: '100%',
+          onTimeRate: completedDrives > 0 ? '100%' : '0%',
           maxTravelRadiusKm: 15,
-          attendedEvents: []
+          attendedEvents: extra.attendedEvents || []
         };
         state.scheduledTasks = [];
         state.activeDeployment = {
@@ -3019,8 +3030,10 @@
       state.currentUser.attendedEvents[existingIdx] = newRecord;
     } else {
       state.currentUser.attendedEvents.unshift(newRecord);
-      state.currentUser.completedEvents = (state.currentUser.completedEvents || 24) + 1;
-      state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 142) + 4;
+      state.currentUser.completedEvents = (state.currentUser.completedEvents || 0) + 1;
+      state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 0) + 4;
+      state.currentUser.reliabilityScore = calculateReliabilityScore(state.currentUser.completedEvents);
+      state.currentUser.onTimeRate = '100%';
     }
 
     if (window.SahayakDB && window.SahayakDB.isConfigured()) {
@@ -3423,9 +3436,10 @@
     stopDeploymentTimer();
 
     // Credit hours and increment completed events
-    state.currentUser.totalVolunteerHours += state.activeDeployment.shiftHours;
-    state.currentUser.completedEvents += 1;
-    state.currentUser.reliabilityScore = Math.min(100, state.currentUser.reliabilityScore + 1);
+    state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 0) + (state.activeDeployment.shiftHours || 4);
+    state.currentUser.completedEvents = (state.currentUser.completedEvents || 0) + 1;
+    state.currentUser.reliabilityScore = calculateReliabilityScore(state.currentUser.completedEvents);
+    state.currentUser.onTimeRate = '100%';
 
     if (window.SahayakDB && window.SahayakDB.isConfigured()) {
       window.SahayakDB.saveDeployment(state.activeDeployment);
@@ -3633,8 +3647,10 @@
       state.currentUser.attendedEvents[existingIdx] = newRecord;
     } else {
       state.currentUser.attendedEvents.unshift(newRecord);
-      state.currentUser.completedEvents = (state.currentUser.completedEvents || 24) + 1;
-      state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 142) + 4;
+      state.currentUser.completedEvents = (state.currentUser.completedEvents || 0) + 1;
+      state.currentUser.totalVolunteerHours = (state.currentUser.totalVolunteerHours || 0) + 4;
+      state.currentUser.reliabilityScore = calculateReliabilityScore(state.currentUser.completedEvents);
+      state.currentUser.onTimeRate = '100%';
     }
 
     if (window.SahayakDB && window.SahayakDB.isConfigured()) {
@@ -5296,11 +5312,16 @@
       email: email,
       password: password,
       role: 'volunteer',
-      mobile: mobile || '+91 98200 00000',
+      mobile: mobile || '',
       location: location || 'Mumbai, Maharashtra',
-      bio: bio || 'Passionate community volunteer ready for field relief.',
-      skills: checkedSkills.length ? checkedSkills : [{ name: 'First Aid & CPR', level: 'Intermediate', verified: true }],
+      bio: bio || '',
+      skills: checkedSkills.length ? checkedSkills : [],
       availability: availability || 'Weekends & Evenings',
+      experience: '0 Months (New Member)',
+      reliabilityScore: 0,
+      completedEvents: 0,
+      totalVolunteerHours: 0,
+      attendedEvents: [],
       registeredAt: new Date().toISOString()
     };
 
@@ -5311,12 +5332,13 @@
       id: newVolunteerAccount.id,
       name: name,
       email: email,
-      mobile: mobile || '+91 98200 00000',
+      mobile: mobile || '',
       role: 'Registered Volunteer',
       location: location || 'Mumbai',
       skills: checkedSkills.map(s => s.name),
       status: 'Available',
-      reliability: 100,
+      reliability: 0,
+      hoursContributed: 0,
       avatar: name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase()
     });
 
