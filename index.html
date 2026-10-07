@@ -671,13 +671,13 @@
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- SCRIPTS WITH CACHE BUSTING -->
-  <script src="env.js?v=4.0"></script>
-  <script src="supabase.min.js"></script>
-  <!-- Leaflet.js (Free OpenStreetMap CDN - HTTPS) -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="data.js?v=4.0"></script>
-  <script src="supabase.js?v=4.0"></script>
-  <script src="app.js?v=4.0"></script>
+  <!-- Firebase SDK Compat (Free CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <!-- ATTENDANCE-FEATURE: Firebase & Attendance Engine -->
+  <script src="firebase-config.js?v=4.1"></script>
+  <script src="attendance.js?v=4.1"></script>
+  <script src="app.js?v=4.1"></script>
 </body>
 </html>

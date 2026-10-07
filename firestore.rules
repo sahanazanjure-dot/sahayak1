@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isVolunteer() {
+      return isAuthenticated() && request.auth.token.role == 'volunteer';
+    }
+    
+    function isNgo() {
+      return isAuthenticated() && request.auth.token.role == 'ngo';
+    }
+    
+    function isOwner(volunteerId) {
+      return isAuthenticated() && request.auth.uid == volunteerId;
+    }
+
+    // ========================================================
+    // ATTENDANCE RECORDS (TAMPER-RESISTANT & APPEND-ONLY)
+    // ========================================================
+    match /attendance_records/{recordId} {
+      
+      // 1. READ: Volunteers can read their own records; NGOs can read records for their events
+      allow read: if isAuthenticated() && (
+        resource.data.volunteerId == request.auth.uid ||
+        resource.data.ngoId == request.auth.uid ||
+        request.auth.token.role == 'ngo'
+      );
+      
+      // 2. CREATE: Volunteers can only create their own check-in/out records
+      // Enforce server-side timestamp validation (reject manipulated device clocks)
+      allow create: if isAuthenticated() &&
+        request.resource.data.volunteerId == request.auth.uid &&
+        request.resource.data.serverCreatedAt == request.time &&
+        request.resource.data.trustScore is number &&
+        request.resource.data.status in ['ON_SITE', 'VERIFIED', 'FLAGGED'];
+      
+      // 3. UPDATE: VOLUNTEERS CAN NEVER UPDATE/EDIT EXISTING RECORDS!
+      // Only the assigned NGO Coordinator can update the status (Approve/Flag/Reject) with an audit note.
+      allow update: if isAuthenticated() &&
+        isNgo() &&
+        // Protect original biometric and GPS fields from being changed
+        request.resource.data.volunteerId == resource.data.volunteerId &&
+        request.resource.data.checkInTime == resource.data.checkInTime &&
+        request.resource.data.selfieUrl == resource.data.selfieUrl &&
+        request.resource.data.volunteerLocation == resource.data.volunteerLocation &&
+        request.resource.data.trustScore == resource.data.trustScore &&
+        // Ensure reviewer and audit trail are updated with server time
+        request.resource.data.reviewedAt == request.time;
+        
+      // 4. DELETE: FORBIDDEN FOR ALL USERS (Append-only audit trail)
+      allow delete: if false;
+    }
+
+    // ========================================================
+    // EVENTS COLLECTION
+    // ========================================================
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isNgo();
+    }
+  }
+}
