@@ -9,6 +9,7 @@ const INITIAL_DATA = {
     mobile: "+91 98204 88321",
     avatar: "RS",
     role: "volunteer", // 'volunteer' | 'ngo' | 'organizer'
+    identityVerified: true, // Prototype Volunteer Identity Verification
     location: "Andheri West, Mumbai",
     coordinates: { lat: 19.1136, lng: 72.8697 },
     bio: "Certified First Aid provider and disaster management enthusiast with 3+ years active field service across Mumbai & Western Maharashtra.",
@@ -323,6 +324,7 @@ const INITIAL_DATA = {
       availability: "Weekends & Evenings",
       matchScore: 92,
       reliabilityScore: 98,
+      identityVerified: true,
       status: "Matched", // Available, Matched, Deployed, Completed
       assignedEvent: "Medical Relief Camp",
       hoursContributed: 142
@@ -336,6 +338,7 @@ const INITIAL_DATA = {
       availability: "Full Weekends",
       matchScore: 95,
       reliabilityScore: 99,
+      identityVerified: true,
       status: "Matched",
       assignedEvent: "Medical Relief Camp",
       hoursContributed: 198
@@ -349,6 +352,7 @@ const INITIAL_DATA = {
       availability: "Saturdays 2PM - 9PM",
       matchScore: 89,
       reliabilityScore: 94,
+      identityVerified: true,
       status: "Matched",
       assignedEvent: "Medical Relief Camp",
       hoursContributed: 86
@@ -362,6 +366,7 @@ const INITIAL_DATA = {
       availability: "Weekends",
       matchScore: 91,
       reliabilityScore: 96,
+      identityVerified: true,
       status: "Matched",
       assignedEvent: "Medical Relief Camp",
       hoursContributed: 114
@@ -375,6 +380,7 @@ const INITIAL_DATA = {
       availability: "Immediate / On-Call",
       matchScore: 87,
       reliabilityScore: 97,
+      identityVerified: false,
       status: "Available",
       assignedEvent: null,
       hoursContributed: 165
@@ -388,6 +394,7 @@ const INITIAL_DATA = {
       availability: "Immediate",
       matchScore: 94,
       reliabilityScore: 92,
+      identityVerified: true,
       status: "Deployed",
       assignedEvent: "Flood Relief Support",
       hoursContributed: 74
@@ -401,6 +408,7 @@ const INITIAL_DATA = {
       availability: "Sundays",
       matchScore: 86,
       reliabilityScore: 95,
+      identityVerified: false,
       status: "Available",
       assignedEvent: null,
       hoursContributed: 92
@@ -414,6 +422,7 @@ const INITIAL_DATA = {
       availability: "Nights & Weekends",
       matchScore: 90,
       reliabilityScore: 96,
+      identityVerified: true,
       status: "Available",
       assignedEvent: null,
       hoursContributed: 210

@@ -4898,3 +4898,269 @@ h1, h2, h3, h4, h5, h6 {
   border: 2px solid #fff;
 }
 
+/* ========================================================
+   VOLUNTEER IDENTITY VERIFICATION COMPONENT & NGO BADGES
+======================================================== */
+.identity-verification-card {
+  background: #ffffff;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.identity-verification-card.unverified {
+  border-left: 4px solid var(--primary-600);
+}
+
+.identity-verification-card.verified {
+  border-color: #a7f3d0;
+  border-left: 4px solid #10b981;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.verification-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.verification-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.verification-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.verification-icon-circle.primary {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-100);
+}
+
+.verification-icon-circle.success {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.verification-card-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary-900);
+  margin: 0;
+}
+
+.verification-card-subtitle {
+  font-size: 0.85rem;
+  color: var(--neutral-600);
+  margin-top: 2px;
+}
+
+.demo-prototype-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--neutral-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.demo-prototype-pill.amber {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.demo-prototype-pill.green {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.aadhaar-input-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.aadhaar-input-field {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  font-family: 'JetBrains Mono', monospace, 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  border: 1.5px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  color: var(--neutral-900);
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.aadhaar-input-field:focus {
+  outline: none;
+  border-color: var(--primary-600);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.aadhaar-field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--neutral-400);
+  pointer-events: none;
+}
+
+.aadhaar-helper-text {
+  font-size: 0.78rem;
+  color: var(--neutral-500);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.consent-checkbox-wrap {
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.consent-checkbox-wrap input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: var(--primary-600);
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.consent-checkbox-wrap label {
+  font-size: 0.82rem;
+  color: var(--neutral-700);
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+/* NGO Professional Verification Badge */
+.ngo-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+  font-size: 0.73rem;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.08);
+}
+
+.ngo-verified-badge svg {
+  flex-shrink: 0;
+}
+
+/* OTP Digits Grid */
+.otp-input-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.otp-box-input {
+  width: 46px;
+  height: 52px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: monospace;
+  border: 2px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  color: var(--primary-900);
+  transition: all 0.2s ease;
+}
+
+.otp-box-input:focus {
+  border-color: var(--primary-600);
+  background: var(--primary-50);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+  outline: none;
+}
+
+.demo-otp-callout {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin: 14px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.demo-otp-code-pill {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed #0284c7;
+}
+
+/* Verified Check Animation */
+.verified-success-check {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  border: 2px solid #34d399;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+
