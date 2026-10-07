@@ -539,5 +539,216 @@ const INITIAL_DATA = {
       publicProfile: true,
       allowAiMatching: true
     }
-  }
+  },
+
+  // ==========================================================
+  // CONSOLIDATED INTERACTIVE MAP LOCATIONS & GPS TELEMETRY
+  // Easily editable single array for Leaflet OSM Engine
+  // ==========================================================
+  mapLocations: [
+    // 1. PRIMARY NGO DRIVE VENUE: Medical Relief Camp (Andheri West)
+    {
+      id: "map-opp-med-01",
+      type: "ngo_drive", // 'ngo_drive' | 'volunteer' | 'emergency_sos'
+      title: "Medical Relief Camp",
+      organization: "Helping Hands Foundation",
+      category: "Healthcare & Relief",
+      location: "Community Health Centre, Andheri West, Mumbai",
+      coordinates: [19.1197, 72.8464],
+      status: "MATCHED",
+      statusLabel: "Active Drive Venue",
+      statusClass: "badge-primary",
+      role: "Lead Medical & Triage Station",
+      volunteersCount: "12 / 20 Matched",
+      geofenceRadiusMeters: 200,
+      isPrimaryVenue: true,
+      description: "Primary triage station, free diagnostic dispensary & medication distribution.",
+      actionUrl: "opp-med-01",
+      contact: "Dr. S. Mehta (+91 98201 44321)"
+    },
+    // 2. NGO DRIVE: Food Distribution Drive (Dharavi)
+    {
+      id: "map-opp-food-02",
+      type: "ngo_drive",
+      title: "Food Distribution Drive",
+      organization: "Robin Hood Army & Roti Bank",
+      category: "Hunger Relief",
+      location: "Dharavi Transit Camp Ground, Mumbai",
+      coordinates: [19.0402, 72.8550],
+      status: "OPEN",
+      statusLabel: "Open Drive (19 / 25)",
+      statusClass: "badge-neutral",
+      role: "Nutrition & Ration Dispatch",
+      volunteersCount: "19 / 25 Matched",
+      geofenceRadiusMeters: 200,
+      isPrimaryVenue: false,
+      description: "Packaging and dispatching 1,200 nutritious hot meals and ration kits.",
+      actionUrl: "opp-food-02",
+      contact: "Vikram Malhotra (+91 98112 34900)"
+    },
+    // 3. NGO DRIVE: Community Teaching Program (Bandra)
+    {
+      id: "map-opp-teach-03",
+      type: "ngo_drive",
+      title: "Community Teaching Program",
+      organization: "Aakanksha Educational Trust",
+      category: "Education",
+      location: "Bandra Municipal School, Mumbai",
+      coordinates: [19.0596, 72.8295],
+      status: "OPEN",
+      statusLabel: "Open Drive (11 / 15)",
+      statusClass: "badge-neutral",
+      role: "Youth Mentorship & STEM",
+      volunteersCount: "11 / 15 Matched",
+      geofenceRadiusMeters: 200,
+      isPrimaryVenue: false,
+      description: "Weekend foundational STEM and conversational English mentorship for 80 children.",
+      actionUrl: "opp-teach-03",
+      contact: "Meera Nair (+91 98210 11928)"
+    },
+    // 4. NGO DRIVE: Disaster Preparedness Base (Dadar)
+    {
+      id: "map-opp-disaster-04",
+      type: "ngo_drive",
+      title: "Disaster Preparedness Centre",
+      organization: "SEEDS India Emergency Unit",
+      category: "Disaster & Emergency",
+      location: "Dadar Civic Grounds, Mumbai",
+      coordinates: [19.0178, 72.8478],
+      status: "OPEN",
+      statusLabel: "Staging Area (14 / 20)",
+      statusClass: "badge-neutral",
+      role: "Disaster Defense Readiness",
+      volunteersCount: "14 / 20 Matched",
+      geofenceRadiusMeters: 250,
+      isPrimaryVenue: false,
+      description: "Rapid disaster response equipment staging and sandbag distribution.",
+      actionUrl: "opp-disaster-04",
+      contact: "Commander K. Rane (+91 98700 88210)"
+    },
+    // 5. EMERGENCY SOS: Kurla Flood Relief Mobilization (Pulsing Red)
+    {
+      id: "map-emg-01",
+      type: "emergency_sos",
+      title: "EMERGENCY SOS: Flood Relief Mobilization",
+      organization: "BMC Disaster Management & Sahayak QRF",
+      category: "Critical Emergency",
+      location: "Kurla & Sion Lowland Sector, Mithi River Basin, Mumbai",
+      coordinates: [19.0726, 72.8845],
+      status: "EMERGENCY SOS ACTIVE",
+      statusLabel: "CRITICAL SOS ACTIVE",
+      statusClass: "badge-danger",
+      role: "Water Rescue & High-Ground Evacuation",
+      volunteersCount: "12 Deployed / 25 Needed",
+      geofenceRadiusMeters: 400,
+      isPrimaryVenue: false,
+      description: "Severe waterlogging due to tidal backup. Urgent mobilization for drinking water & high-ground evacuation.",
+      actionUrl: "emergency",
+      contact: "+91 22 2269 4725 (Control Room)"
+    },
+    // 6. VOLUNTEER: Rahul Sharma (You / Current User)
+    {
+      id: "map-vol-rahul",
+      type: "volunteer",
+      title: "Rahul Sharma (You)",
+      organization: "Sahayak Certified Responder",
+      category: "First Aid & CPR Lead",
+      location: "Andheri West, Mumbai (14m to Venue)",
+      coordinates: [19.1195, 72.8462], // Positioned 14m inside the 200m geofence
+      status: "DEPLOYED",
+      statusLabel: "DEPLOYED (On-Ground)",
+      statusClass: "badge-success",
+      role: "Certified First Responder • 98% Reliability",
+      volunteersCount: "Clock-In: 04:02 PM",
+      isCurrentUser: true,
+      homeCoordinates: [19.1136, 72.8697],
+      travelRadiusKm: 12,
+      avatar: "RS"
+    },
+    // 7. VOLUNTEER: Ananya Sen (Deployed)
+    {
+      id: "map-vol-ananya",
+      type: "volunteer",
+      title: "Ananya Sen",
+      organization: "Medical Corps Volunteer",
+      category: "Emergency Triage Lead",
+      location: "Vile Parle West, Mumbai",
+      coordinates: [19.1005, 72.8441],
+      status: "DEPLOYED",
+      statusLabel: "DEPLOYED (On-Ground)",
+      statusClass: "badge-success",
+      role: "Team Lead & BLS Certified • 99% Reliability",
+      volunteersCount: "4.0 hrs Logged",
+      isCurrentUser: false,
+      avatar: "AS"
+    },
+    // 8. VOLUNTEER: Rohan Patel (Matched)
+    {
+      id: "map-vol-rohan",
+      type: "volunteer",
+      title: "Rohan Patel",
+      organization: "Civic Action Volunteer",
+      category: "Crowd Management",
+      location: "Juhu / JVPD Scheme, Mumbai",
+      coordinates: [19.1075, 72.8263],
+      status: "MATCHED",
+      statusLabel: "MATCHED (En Route)",
+      statusClass: "badge-primary",
+      role: "Crowd Control & Logistics • 94% Reliability",
+      volunteersCount: "ETA 12 mins",
+      isCurrentUser: false,
+      avatar: "RP"
+    },
+    // 9. VOLUNTEER: Priya Verma (Matched)
+    {
+      id: "map-vol-priya",
+      type: "volunteer",
+      title: "Priya Verma",
+      organization: "Community Caretaker",
+      category: "Registration & Vitals",
+      location: "Andheri East, Mumbai",
+      coordinates: [19.1158, 72.8623],
+      status: "MATCHED",
+      statusLabel: "MATCHED (Ready)",
+      statusClass: "badge-primary",
+      role: "Patient Intake & Vitals • 96% Reliability",
+      volunteersCount: "On Standby",
+      isCurrentUser: false,
+      avatar: "PV"
+    },
+    // 10. VOLUNTEER: Aditya Roy (Deployed to SOS)
+    {
+      id: "map-vol-aditya",
+      type: "volunteer",
+      title: "Aditya Roy",
+      organization: "Disaster Quick Action Unit",
+      category: "Sandbagging & Heavy Logistics",
+      location: "Kurla West Lowlands, Mumbai",
+      coordinates: [19.0680, 72.8750],
+      status: "DEPLOYED",
+      statusLabel: "DEPLOYED (SOS Sector)",
+      statusClass: "badge-success",
+      role: "Disaster Response Specialist • 92% Reliability",
+      volunteersCount: "Assisting Flood Relief",
+      isCurrentUser: false,
+      avatar: "AR"
+    },
+    // 11. VOLUNTEER: Kavita Deshmukh (Completed)
+    {
+      id: "map-vol-kavita",
+      type: "volunteer",
+      title: "Kavita Deshmukh",
+      organization: "Red Cross Volunteer",
+      category: "First Aid & Child Care",
+      location: "Santacruz West, Mumbai",
+      coordinates: [19.0843, 72.8360],
+      status: "COMPLETED",
+      statusLabel: "COMPLETED (Shift Concluded)",
+      statusClass: "badge-neutral",
+      role: "Child Welfare Support • 97% Reliability",
+      volunteersCount: "Shift Logged: 5.0 hrs",
+      isCurrentUser: false,
+      avatar: "KD"
+    }
+  ]
 };

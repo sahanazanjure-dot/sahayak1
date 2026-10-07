@@ -18,6 +18,7 @@
     ngoEvents: JSON.parse(JSON.stringify(INITIAL_DATA.ngoEvents)),
     analytics: JSON.parse(JSON.stringify(INITIAL_DATA.analytics)),
     settings: JSON.parse(JSON.stringify(INITIAL_DATA.settings)),
+    mapLocations: JSON.parse(JSON.stringify(INITIAL_DATA.mapLocations || [])),
 
     // Navigation state
     activePage: 'dashboard', // dashboard, profile, opportunities, smart-match, event-details, deployments, emergency, analytics, settings, ngo-volunteers
@@ -568,12 +569,553 @@
   }
 
   /* ========================================================
+     LEAFLET INTERACTIVE MAP CONTROLLER (OPENSTREETMAP ENGINE)
+     Free Civic-Tech Live GPS Telemetry, Geo-Fencing & SOS Radar
+  ======================================================== */
+  const activeMapInstances = {};
+  let currentMapFilter = 'ALL';
+  let isGeofenceVisible = true;
+  let isTravelRadiusVisible = true;
+
+  // Haversine distance formula in meters
+  function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return 0;
+    const R = 6371e3; // Earth's radius in meters
+    const phi1 = (lat1 * Math.PI) / 180;
+    const phi2 = (lat2 * Math.PI) / 180;
+    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+    const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+      Math.cos(phi1) * Math.cos(phi2) *
+      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function getVolunteerCurrentUserCoordinates() {
+    const locations = state.mapLocations || INITIAL_DATA.mapLocations || [];
+    const rahulLoc = locations.find(m => m.id === 'map-vol-rahul');
+    if (rahulLoc && rahulLoc.coordinates) return rahulLoc.coordinates;
+    return [19.1195, 72.8462]; // Default 14m inside venue
+  }
+
+  function updateGeofenceStatusDisplay() {
+    const pill = document.getElementById('map-geofence-status-pill');
+    if (!pill) return;
+
+    const userCoords = getVolunteerCurrentUserCoordinates();
+    const locations = state.mapLocations || INITIAL_DATA.mapLocations || [];
+    const primaryVenue = locations.find(l => l.isPrimaryVenue) || locations[0];
+    if (!primaryVenue) return;
+
+    const distMeters = calculateDistanceMeters(userCoords[0], userCoords[1], primaryVenue.coordinates[0], primaryVenue.coordinates[1]);
+    const radius = primaryVenue.geofenceRadiusMeters || 200;
+
+    if (distMeters <= radius) {
+      pill.className = 'badge badge-success';
+      pill.style.fontSize = '0.74rem';
+      pill.style.padding = '4px 10px';
+      pill.innerHTML = `✓ Inside ${radius}m Geofence (${Math.round(distMeters)}m) — Check-In Ready`;
+    } else {
+      pill.className = 'badge badge-warning';
+      pill.style.fontSize = '0.74rem';
+      pill.style.padding = '4px 10px';
+      pill.innerHTML = `⚠️ Outside Geofence (${(distMeters / 1000).toFixed(1)} km) — Move within ${radius}m`;
+    }
+  }
+
+  function initOrUpdateLeafletMap(containerId = 'sahayak-live-map', mapOptions = {}) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // Gracefully wait if Leaflet CDN is still parsing
+    if (typeof window.L === 'undefined') {
+      setTimeout(() => initOrUpdateLeafletMap(containerId, mapOptions), 100);
+      return;
+    }
+
+    // Clean up existing instance for this container if present
+    if (activeMapInstances[containerId]) {
+      try {
+        activeMapInstances[containerId].remove();
+      } catch (e) {
+        console.warn('Map cleanup notice:', e);
+      }
+      delete activeMapInstances[containerId];
+    }
+
+    const defaultCenter = mapOptions.center || [19.0760, 72.8777]; // Mumbai coordinates (19.0760, 72.8777)
+    const defaultZoom = mapOptions.zoom || 11;
+
+    // Create Leaflet Map Instance
+    const map = L.map(containerId, {
+      center: defaultCenter,
+      zoom: defaultZoom,
+      zoomControl: true,
+      scrollWheelZoom: true
+    });
+
+    activeMapInstances[containerId] = map;
+
+    // Standard OpenStreetMap Tile Layer (Free, HTTPS, No API key)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors | Sahayak Platform'
+    }).addTo(map);
+
+    const locations = state.mapLocations || INITIAL_DATA.mapLocations || [];
+    const filteredLocations = locations.filter(loc => {
+      if (mapOptions.filterType) return loc.type === mapOptions.filterType;
+      if (currentMapFilter === 'ALL') return true;
+      return loc.type === currentMapFilter;
+    });
+
+    const markerGroup = L.featureGroup();
+
+    filteredLocations.forEach(loc => {
+      const isUser = loc.isCurrentUser;
+      const isSos = loc.type === 'emergency_sos';
+      const isNgo = loc.type === 'ngo_drive';
+
+      let pinColorClass = 'sahayak-pin-vol-teal';
+      let iconSymbol = loc.avatar || '👤';
+
+      if (isNgo) {
+        pinColorClass = 'sahayak-pin-ngo';
+        iconSymbol = '🏢';
+      } else if (isSos) {
+        pinColorClass = 'sahayak-pin-sos';
+        iconSymbol = '🚨';
+      } else if (isUser) {
+        pinColorClass = 'sahayak-pin-vol-navy';
+        iconSymbol = 'RS';
+      }
+
+      const pinHtml = `
+        <div class="sahayak-pin-wrapper">
+          ${isSos ? '<div class="sahayak-sos-pulse-ring"></div>' : ''}
+          <div class="sahayak-pin-icon ${pinColorClass}" title="${loc.title}">
+            ${iconSymbol}
+          </div>
+          <div class="sahayak-pin-label">${isUser ? 'YOU (RS)' : (loc.title.length > 18 ? loc.title.substring(0, 16) + '...' : loc.title)}</div>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: pinHtml,
+        className: 'sahayak-custom-div-icon',
+        iconSize: [44, 52],
+        iconAnchor: [22, 46],
+        popupAnchor: [0, -42]
+      });
+
+      const marker = L.marker(loc.coordinates, { icon: customIcon });
+
+      // Build Rich Interactive Popup
+      const userCoords = getVolunteerCurrentUserCoordinates();
+      const distMeters = calculateDistanceMeters(userCoords[0], userCoords[1], loc.coordinates[0], loc.coordinates[1]);
+      const distFormatted = distMeters < 1000 ? `${Math.round(distMeters)}m` : `${(distMeters / 1000).toFixed(1)} km`;
+
+      const popupHtml = `
+        <div class="sahayak-popup-box">
+          <div class="sahayak-popup-header">
+            <span class="badge ${loc.statusClass || 'badge-primary'}" style="font-size: 0.68rem; font-weight: 800;">
+              ${loc.statusLabel || loc.status}
+            </span>
+            <span style="font-size: 0.7rem; color: var(--neutral-400); font-family: monospace;">
+              ${loc.coordinates[0].toFixed(3)}°N, ${loc.coordinates[1].toFixed(3)}°E
+            </span>
+          </div>
+          <h4 class="sahayak-popup-title">${loc.title}</h4>
+          <div class="sahayak-popup-sub">🏢 ${loc.organization}</div>
+          <div class="sahayak-popup-meta-row">
+            <span>📍</span>
+            <span>${loc.location}</span>
+          </div>
+          <div class="sahayak-popup-meta-row">
+            <span>⚡</span>
+            <span><strong>Role/Duty:</strong> ${loc.role || loc.category}</span>
+          </div>
+          <div class="sahayak-popup-meta-row" style="color: var(--primary-700); font-weight: 700;">
+            <span>🧭</span>
+            <span>Distance from you: <strong>${distFormatted}</strong></span>
+          </div>
+          ${loc.geofenceRadiusMeters ? `
+            <div class="sahayak-popup-meta-row" style="color: #059669; font-weight: 700;">
+              <span>🛡️</span>
+              <span>Geo-Fence Radius: <strong>${loc.geofenceRadiusMeters}m perimeter</strong></span>
+            </div>
+          ` : ''}
+          <div class="sahayak-popup-actions">
+            ${isNgo ? `
+              <button type="button" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.76rem; padding: 6px 10px; cursor: pointer;" onclick="window.SahayakApp.navigateTo('event-details', { eventId: '${loc.actionUrl || 'opp-med-01'}' });">
+                Inspect Drive Details →
+              </button>
+            ` : isSos ? `
+              <button type="button" class="btn btn-sm btn-danger" style="flex: 1; font-size: 0.76rem; padding: 6px 10px; cursor: pointer;" onclick="window.SahayakApp.navigateTo('emergency');">
+                🚨 Respond to SOS
+              </button>
+            ` : `
+              <button type="button" class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.76rem; padding: 6px 10px; cursor: pointer;" onclick="window.SahayakApp.showToast('Volunteer telemetry active: ${loc.title}', 'success');">
+                📡 Ping GPS Telemetry
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml);
+      markerGroup.addLayer(marker);
+    });
+
+    markerGroup.addTo(map);
+
+    // Add Primary Venue 200m Geo-Fence Circle (Community Health Centre)
+    if (isGeofenceVisible) {
+      const primaryVenue = locations.find(l => l.isPrimaryVenue) || locations[0];
+      if (primaryVenue) {
+        const geofenceCircle = L.circle(primaryVenue.coordinates, {
+          color: '#059669',
+          fillColor: '#10b981',
+          fillOpacity: 0.16,
+          weight: 2,
+          dashArray: '6, 6',
+          radius: primaryVenue.geofenceRadiusMeters || 200
+        }).addTo(map);
+
+        geofenceCircle.bindPopup(`
+          <div style="padding: 10px; font-family: 'Plus Jakarta Sans', sans-serif;">
+            <div style="font-weight: 800; color: #065f46; font-size: 0.85rem; margin-bottom: 2px;">
+              🛡️ 200m Geo-Fenced Perimeter Zone
+            </div>
+            <div style="font-size: 0.76rem; color: #334155; margin-bottom: 6px;">
+              ${primaryVenue.title} • ${primaryVenue.location}
+            </div>
+            <div style="font-size: 0.72rem; color: #047857; font-weight: 700;">
+              ✓ GPS Lock Required for Shift Punch-In &amp; Telemetry
+            </div>
+          </div>
+        `);
+      }
+    }
+
+    // Add 12km Smart Matching Travel Radius Circle around Volunteer Base
+    if (isTravelRadiusVisible) {
+      const rahulLoc = locations.find(l => l.isCurrentUser);
+      if (rahulLoc) {
+        const center = rahulLoc.homeCoordinates || rahulLoc.coordinates;
+        const radiusMeters = (rahulLoc.travelRadiusKm || 12) * 1000;
+        const travelCircle = L.circle(center, {
+          color: '#2563eb',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.05,
+          weight: 1.5,
+          dashArray: '4, 4',
+          radius: radiusMeters
+        }).addTo(map);
+
+        travelCircle.bindPopup(`
+          <div style="padding: 8px; font-family: 'Plus Jakarta Sans', sans-serif;">
+            <div style="font-weight: 800; color: #1e40af; font-size: 0.82rem;">
+              ⚡ Smart Match Travel Boundary (12 km)
+            </div>
+            <div style="font-size: 0.72rem; color: #475569;">
+              Opportunities within this circle are matched with 90%+ proximity vector score.
+            </div>
+          </div>
+        `);
+      }
+    }
+
+    // Update Live Geofence Status Pill on UI
+    updateGeofenceStatusDisplay();
+
+    // Invalidate map size so it renders crisp tiles without grey boxes
+    setTimeout(() => {
+      if (activeMapInstances[containerId]) {
+        activeMapInstances[containerId].invalidateSize();
+      }
+    }, 150);
+
+    setTimeout(() => {
+      if (activeMapInstances[containerId]) {
+        activeMapInstances[containerId].invalidateSize();
+      }
+    }, 450);
+  }
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      showToast('Geolocation is not supported by your browser. Using simulated Mumbai coordinates.', 'warning');
+      return;
+    }
+
+    showToast('Requesting GPS location from browser telemetry...', 'primary');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = Math.round(position.coords.accuracy || 15);
+
+        // Update Rahul's coordinates in state.mapLocations
+        const rahul = (state.mapLocations || []).find(m => m.id === 'map-vol-rahul');
+        if (rahul) {
+          rahul.coordinates = [lat, lng];
+          rahul.location = `Live GPS (${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E)`;
+        }
+
+        // Refresh all active maps and fly smoothly to user position
+        Object.keys(activeMapInstances).forEach(id => {
+          initOrUpdateLeafletMap(id);
+          const map = activeMapInstances[id];
+          if (map) {
+            map.flyTo([lat, lng], 14, { duration: 1.2 });
+          }
+        });
+
+        // Update topbar location indicator
+        const topbarLoc = document.getElementById('topbar-location-text');
+        if (topbarLoc) {
+          topbarLoc.textContent = `GPS: ${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E (±${accuracy}m)`;
+        }
+
+        showToast(`📍 Live GPS locked! Coordinates: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E (±${accuracy}m)`, 'success');
+      },
+      (error) => {
+        let msg = 'Location permission denied or unavailable. Fallback to simulated Mumbai coordinates.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Location permission was denied. Using simulated Mumbai GPS coordinates.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Location request timed out. Using default Mumbai coordinates.';
+        }
+        showToast(msg, 'warning');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000
+      }
+    );
+  }
+
+  function simulateUserInsideGeofence() {
+    const rahul = (state.mapLocations || []).find(m => m.id === 'map-vol-rahul');
+    if (rahul) {
+      rahul.coordinates = [19.1195, 72.8462]; // 14m inside venue
+      rahul.location = 'Andheri West (14m inside venue perimeter)';
+    }
+    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
+    const mainMap = activeMapInstances['sahayak-live-map'];
+    if (mainMap) mainMap.flyTo([19.1195, 72.8462], 15, { duration: 1.0 });
+    showToast('GPS Telemetry Simulated: You are 14m inside Community Health Centre perimeter!', 'success');
+  }
+
+  function simulateUserOutsideGeofence() {
+    const rahul = (state.mapLocations || []).find(m => m.id === 'map-vol-rahul');
+    if (rahul) {
+      rahul.coordinates = [19.1136, 72.8697]; // 2.4 km away
+      rahul.location = 'Andheri West Home (2.4 km from venue)';
+    }
+    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
+    const mainMap = activeMapInstances['sahayak-live-map'];
+    if (mainMap) mainMap.flyTo([19.1136, 72.8697], 13, { duration: 1.0 });
+    showToast('GPS Telemetry Simulated: You are 2.4 km away from venue perimeter.', 'warning');
+  }
+
+  function filterMapLocations(filterType) {
+    currentMapFilter = filterType;
+    const filterBtns = document.querySelectorAll('.sahayak-map-filter-btn[data-filter]');
+    filterBtns.forEach(btn => {
+      if (btn.getAttribute('data-filter') === filterType) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
+  }
+
+  function resetMapView() {
+    Object.keys(activeMapInstances).forEach(id => {
+      const map = activeMapInstances[id];
+      if (map) {
+        map.flyTo([19.0760, 72.8777], 11, { duration: 1.0 });
+      }
+    });
+    showToast('Map view recentered to Mumbai metropolitan coordinates.', 'primary');
+  }
+
+  function toggleGeofenceCircle() {
+    isGeofenceVisible = !isGeofenceVisible;
+    const btn = document.getElementById('btn-toggle-geofence');
+    if (btn) {
+      if (isGeofenceVisible) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
+    showToast(`200m Geo-Fence perimeter display ${isGeofenceVisible ? 'enabled' : 'hidden'}.`, 'primary');
+  }
+
+  function toggleTravelRadiusCircle() {
+    isTravelRadiusVisible = !isTravelRadiusVisible;
+    const btn = document.getElementById('btn-toggle-radius');
+    if (btn) {
+      if (isTravelRadiusVisible) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
+    showToast(`12km Smart Matching travel radius ${isTravelRadiusVisible ? 'enabled' : 'hidden'}.`, 'primary');
+  }
+
+  function renderMapCardComponent(options = {}) {
+    const locations = state.mapLocations || INITIAL_DATA.mapLocations || [];
+    const ngoCount = locations.filter(l => l.type === 'ngo_drive').length;
+    const volCount = locations.filter(l => l.type === 'volunteer').length;
+    const sosCount = locations.filter(l => l.type === 'emergency_sos').length;
+
+    return `
+      <!-- SAHAYAK LEAFLET INTERACTIVE MAP COMPONENT -->
+      <div class="sahayak-map-card">
+        <!-- TOPBAR -->
+        <div class="sahayak-map-topbar">
+          <div class="sahayak-map-title-wrap">
+            <h3 class="sahayak-map-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2.5"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+              ${options.title || 'Live GPS Telemetry & Ground Coordination Map'}
+            </h3>
+            <span class="badge badge-success" style="font-size: 0.72rem;">● 14 GPS Signals Active</span>
+          </div>
+
+          <div class="sahayak-map-actions">
+            <!-- Geofence status live pill -->
+            <span id="map-geofence-status-pill" class="badge badge-success" style="font-size: 0.74rem;">
+              ✓ Inside 200m Geofence (14m) — Check-In Ready
+            </span>
+
+            <button type="button" class="btn btn-sm btn-primary" style="font-size: 0.76rem; padding: 6px 12px; gap: 4px;" onclick="window.SahayakApp.useCurrentLocation();">
+              📍 Use My Location
+            </button>
+
+            <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.76rem; padding: 6px 10px;" onclick="window.SahayakApp.resetMapView();" title="Center map on Mumbai">
+              🎯 Recenter
+            </button>
+          </div>
+        </div>
+
+        <!-- FILTERS & GEOFENCE CONTROLS BAR -->
+        <div class="sahayak-map-filters-bar">
+          <div class="sahayak-map-filter-group">
+            <span style="font-weight: 800; color: var(--neutral-500); font-size: 0.72rem; text-transform: uppercase;">Filters:</span>
+            <button type="button" class="sahayak-map-filter-btn ${currentMapFilter === 'ALL' ? 'active' : ''}" data-filter="ALL" onclick="window.SahayakApp.filterMapLocations('ALL');">
+              All (${locations.length})
+            </button>
+            <button type="button" class="sahayak-map-filter-btn ${currentMapFilter === 'ngo_drive' ? 'active' : ''}" data-filter="ngo_drive" onclick="window.SahayakApp.filterMapLocations('ngo_drive');">
+              🏢 NGO Drives (${ngoCount})
+            </button>
+            <button type="button" class="sahayak-map-filter-btn ${currentMapFilter === 'volunteer' ? 'active' : ''}" data-filter="volunteer" onclick="window.SahayakApp.filterMapLocations('volunteer');">
+              👤 Volunteers (${volCount})
+            </button>
+            <button type="button" class="sahayak-map-filter-btn ${currentMapFilter === 'emergency_sos' ? 'active' : ''}" data-filter="emergency_sos" style="color: var(--danger-600);" onclick="window.SahayakApp.filterMapLocations('emergency_sos');">
+              🚨 Emergency SOS (${sosCount})
+            </button>
+          </div>
+
+          <div class="sahayak-map-filter-group">
+            <span style="font-weight: 800; color: var(--neutral-500); font-size: 0.72rem; text-transform: uppercase;">Layers &amp; Simulation:</span>
+            <button type="button" id="btn-toggle-geofence" class="sahayak-map-filter-btn ${isGeofenceVisible ? 'active' : ''}" onclick="window.SahayakApp.toggleGeofenceCircle();" title="Toggle 200m venue perimeter">
+              ⭕ 200m Geofence
+            </button>
+            <button type="button" id="btn-toggle-radius" class="sahayak-map-filter-btn ${isTravelRadiusVisible ? 'active' : ''}" onclick="window.SahayakApp.toggleTravelRadiusCircle();" title="Toggle 12km Smart Matching radius">
+              ⚡ 12km Radius
+            </button>
+            <button type="button" class="sahayak-map-filter-btn" style="background: #f0fdf4; color: #15803d; border-color: #86efac;" onclick="window.SahayakApp.simulateUserInsideGeofence();" title="Simulate being 14m inside venue perimeter">
+              ✓ Test: Inside (14m)
+            </button>
+            <button type="button" class="sahayak-map-filter-btn" style="background: #fefce8; color: #a16207; border-color: #fde047;" onclick="window.SahayakApp.simulateUserOutsideGeofence();" title="Simulate being 2.4km from venue">
+              ⚠️ Test: Outside (2.4km)
+            </button>
+          </div>
+        </div>
+
+        <!-- LEAFLET OSM CONTAINER -->
+        <div id="${options.containerId || 'sahayak-live-map'}" class="sahayak-map-leaflet-container" style="${options.height ? `height: ${options.height};` : ''}">
+          <!-- Leaflet Map Injected Here -->
+        </div>
+
+        <!-- MAP FOOTER / LEGEND -->
+        <div class="sahayak-map-footer">
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #F59A23; display: inline-block;"></span>
+              NGO Drives
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #1C8C86; display: inline-block;"></span>
+              Verified Volunteers
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #17304A; border: 1px solid #38bdf8; display: inline-block;"></span>
+              Your Location (RS)
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: #ef4444;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #EF4444; display: inline-block;"></span>
+              Emergency SOS
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: #047857;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #059669; background: rgba(16, 185, 129, 0.3); display: inline-block;"></span>
+              200m Geo-Fence (Check-In)
+            </span>
+          </div>
+
+          <div>
+            <span>Powered by <strong>OpenStreetMap</strong> &amp; <strong>Leaflet.js</strong> (No API Key Required)</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Window resize handler to invalidate map sizes so tiles never glitch
+  window.addEventListener('resize', () => {
+    Object.keys(activeMapInstances).forEach(id => {
+      if (activeMapInstances[id]) {
+        activeMapInstances[id].invalidateSize();
+      }
+    });
+  });
+
+  /* ========================================================
      RENDER SHELL & SIDEBAR NAVIGATION
   ======================================================== */
   function renderApp() {
     renderSidebar();
     renderTopbar();
     renderPageContent();
+
+    // Automatically initialize or refresh all active Leaflet maps on the page
+    setTimeout(() => {
+      if (document.getElementById('sahayak-live-map')) {
+        initOrUpdateLeafletMap('sahayak-live-map');
+      }
+      if (document.getElementById('sahayak-ngo-fleet-map')) {
+        initOrUpdateLeafletMap('sahayak-ngo-fleet-map');
+      }
+      if (document.getElementById('sahayak-event-map')) {
+        initOrUpdateLeafletMap('sahayak-event-map', {
+          center: [19.1197, 72.8464],
+          zoom: 13
+        });
+      }
+      if (document.getElementById('sahayak-deployment-radar-map')) {
+        initOrUpdateLeafletMap('sahayak-deployment-radar-map', {
+          center: [19.1197, 72.8464],
+          zoom: 15
+        });
+      }
+    }, 60);
   }
 
   function renderDemoTourBar() {
@@ -876,6 +1418,9 @@
           </button>
         </div>
       ` : ''}
+
+      <!-- LIVE INTERACTIVE LEAFLET COORDINATION & GPS TELEMETRY MAP CARD -->
+      ${renderMapCardComponent({ title: 'Live Community Coordination & Volunteer Field Map (Mumbai)' })}
 
       <!-- MAIN DASHBOARD SPLIT GRID -->
       <div class="dashboard-grid">
@@ -2105,63 +2650,33 @@
         <!-- RIGHT COLUMN: INTERACTIVE MAP CARD & EMERGENCY CONTACT -->
         <div style="display: flex; flex-direction: column; gap: 24px;">
           
-          <!-- STYLIZED INTERACTIVE MAP CARD -->
-          <div class="mock-map-card">
-            <div class="mock-map-header">
-              <div style="font-weight: 700; color: var(--primary-900); font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                Live Geo-Transit Vector
+          <!-- INTERACTIVE VENUE & ROUTE MAP CARD (LEAFLET OSM) -->
+          <div class="sahayak-map-card">
+            <div class="sahayak-map-topbar">
+              <div class="sahayak-map-title-wrap">
+                <h4 class="sahayak-map-title" style="font-size: 0.88rem;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-800)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                  Live Venue &amp; Geo-Transit Vector
+                </h4>
               </div>
-              <span class="badge badge-success" style="font-size: 0.72rem;">2.4 km away</span>
+              <span class="badge badge-success" style="font-size: 0.72rem;">${opp.distanceKm} km away</span>
             </div>
 
-            <div class="map-view-canvas">
-              <!-- SVG Street Map Simulation -->
-              <svg class="map-grid-svg" viewBox="0 0 400 260">
-                <defs>
-                  <pattern id="street-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <line x1="0" y1="0" x2="40" y2="0" stroke="#cbd5e1" stroke-width="1.5" />
-                    <line x1="0" y1="0" x2="0" y2="40" stroke="#cbd5e1" stroke-width="1.5" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="#e2eaf4" />
-                <rect width="100%" height="100%" fill="url(#street-grid)" opacity="0.6" />
+            <div id="sahayak-event-map" class="sahayak-map-leaflet-container" style="height: 270px;"></div>
 
-                <!-- Road paths -->
-                <path d="M 30,220 Q 150,180 280,90" fill="none" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" />
-                <path d="M 30,220 Q 150,180 280,90" fill="none" stroke="#60a5fa" stroke-width="4" stroke-dasharray="6,4" />
-
-                <!-- Origin: Volunteer Home (Rahul) -->
-                <circle cx="30" cy="220" r="8" fill="#1e40af" stroke="#ffffff" stroke-width="3" />
-                
-                <!-- Destination: Medical Camp -->
-                <circle cx="280" cy="90" r="14" fill="rgba(37,99,235,0.2)" />
-                <circle cx="280" cy="90" r="8" fill="#0f3d87" stroke="#ffffff" stroke-width="3" />
-              </svg>
-
-              <!-- Map Pin Floating HTML Overlay -->
-              <div class="map-marker-pin" style="top: 90px; left: 280px;">
-                <div class="map-marker-bubble">Community Health Centre</div>
-                <div class="map-marker-dot"></div>
-              </div>
-
-              <div class="map-marker-pin" style="top: 220px; left: 30px;">
-                <div class="map-marker-bubble" style="background: #1e3a8a;">You (Home)</div>
-              </div>
-            </div>
-
-            <div class="map-footer-bar">
+            <div class="sahayak-map-footer">
               <div>
                 <div style="font-weight: 700; color: var(--neutral-800);">Estimated Travel Time</div>
-                <div style="color: var(--neutral-500); font-size: 0.75rem;">12 mins via SV Road &amp; Link Road</div>
+                <div style="color: var(--neutral-500); font-size: 0.75rem;">12 mins via SV Road • 200m Geofenced Perimeter</div>
               </div>
-              <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.showToast('Navigating GPS routing to Community Health Centre...', 'primary');">
-                Get Directions
+              <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.showToast('Navigating GPS routing to ' + '${opp.title}' + '...', 'primary');">
+                Get Directions 🗺️
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- ORGANIZER & EMERGENCY CONTACT CARD -->
+        <!-- ORGANIZER & EMERGENCY CONTACT CARD -->
           <div class="card">
             <h3 class="card-title" style="margin-bottom: 14px;">Organizer &amp; Contacts</h3>
             
@@ -4303,66 +4818,37 @@
       <!-- FLEET MAP & ACTIVE ROSTER GRID -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
         
-        <!-- LIVE GROUND FLEET MAP CANVAS -->
-        <div class="mock-map-card">
-          <div class="mock-map-header">
-            <div style="font-weight: 800; color: var(--primary-900); font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
-              <span class="pulse-green-dot"></span> Mumbai Field Sectors (Live Geo-Fleet)
+        <!-- LIVE GROUND FLEET MAP CANVAS (LEAFLET OSM ENGINE) -->
+        <div class="sahayak-map-card">
+          <div class="sahayak-map-topbar">
+            <div class="sahayak-map-title-wrap">
+              <h4 class="sahayak-map-title" style="font-size: 0.88rem;">
+                <span class="pulse-green-dot"></span> Mumbai Ground Fleet &amp; Sector Telemetry
+              </h4>
             </div>
-            <span class="badge badge-success" style="font-size: 0.72rem;">14 GPS Signals Active</span>
-          </div>
-
-          <div class="map-view-canvas" style="height: 320px;">
-            <svg class="map-grid-svg" viewBox="0 0 400 320">
-              <defs>
-                <pattern id="ngo-fleet-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="40" y2="0" stroke="#cbd5e1" stroke-width="1.2" />
-                  <line x1="0" y1="0" x2="0" y2="40" stroke="#cbd5e1" stroke-width="1.2" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="#e0f2fe" />
-              <rect width="100%" height="100%" fill="url(#ngo-fleet-grid)" opacity="0.6" />
-
-              <!-- Sector Road Tracks -->
-              <path d="M 40,280 Q 180,180 320,100" fill="none" stroke="#94a3b8" stroke-width="7" />
-              <path d="M 60,80 Q 200,160 360,260" fill="none" stroke="#94a3b8" stroke-width="7" />
-
-              <!-- Sector 1: Andheri Health Centre -->
-              <circle cx="280" cy="110" r="28" fill="rgba(16, 185, 129, 0.2)" />
-              <circle cx="280" cy="110" r="10" fill="#059669" stroke="#ffffff" stroke-width="3" />
-              
-              <!-- Sector 2: Dharavi Transit -->
-              <circle cx="160" cy="210" r="32" fill="rgba(37, 99, 235, 0.2)" />
-              <circle cx="160" cy="210" r="10" fill="#2563eb" stroke="#ffffff" stroke-width="3" />
-
-              <!-- Sector 3: Kurla Relief -->
-              <circle cx="90" cy="110" r="22" fill="rgba(220, 38, 38, 0.2)" />
-              <circle cx="90" cy="110" r="10" fill="#dc2626" stroke="#ffffff" stroke-width="3" />
-            </svg>
-
-            <!-- Map Pin Floating HTML Overlays -->
-            <div class="map-marker-pin" style="top: 110px; left: 280px;">
-              <div class="map-marker-bubble" style="background: #065f46;">📍 Andheri (6 Vols On-Duty)</div>
-            </div>
-
-            <div class="map-marker-pin" style="top: 210px; left: 160px;">
-              <div class="map-marker-bubble" style="background: #1e40af;">📍 Dharavi (5 Vols On-Duty)</div>
-            </div>
-
-            <div class="map-marker-pin" style="top: 110px; left: 90px;">
-              <div class="map-marker-bubble" style="background: #991b1b;">🚨 Kurla SOS (3 Vols Deployed)</div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span class="badge badge-success" style="font-size: 0.72rem;">14 GPS Signals Active</span>
+              <button class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 0.72rem;" onclick="window.SahayakApp.resetMapView();">🎯 Center</button>
             </div>
           </div>
 
-          <div class="map-footer-bar">
-            <span style="font-size: 0.78rem; color: #475569;">All teams reporting at 30-sec telemetry refresh interval.</span>
-            <button class="btn btn-sm btn-secondary" onclick="window.SahayakApp.showToast('All 14 field telemetry beacons confirmed active.', 'success');">
-              Ping All Volunteers
+          <div id="sahayak-ngo-fleet-map" class="sahayak-map-leaflet-container" style="height: 340px;"></div>
+
+          <div class="sahayak-map-footer">
+            <div style="font-size: 0.74rem;">
+              <span>Legend: </span>
+              <strong style="color: #F59A23;">● Drive Venues</strong> • 
+              <strong style="color: #1C8C86;">● Deployed Fleet</strong> • 
+              <strong style="color: #EF4444;">● SOS Sector</strong>
+            </div>
+            <button class="btn btn-sm btn-secondary" style="font-size: 0.72rem; padding: 3px 8px;" onclick="window.SahayakApp.showToast('Re-scanning all volunteer beacons in Mumbai sectors...', 'primary');">
+              📡 Ping Fleet
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- RECENT PHOTO PROOF AUDIT STREAM -->
+      <!-- RECENT PHOTO PROOF AUDIT STREAM -->
         <div class="card">
           <div class="card-header" style="margin-bottom: 12px;">
             <div>
@@ -5932,7 +6418,15 @@
     saveSupabaseSettings,
     disconnectSupabase,
     seedSupabaseData,
-    hydrateFromSupabase
+    hydrateFromSupabase,
+    useCurrentLocation,
+    simulateUserInsideGeofence,
+    simulateUserOutsideGeofence,
+    filterMapLocations,
+    resetMapView,
+    toggleGeofenceCircle,
+    toggleTravelRadiusCircle,
+    initOrUpdateLeafletMap
   };
 
   // Bind role tabs on Auth screen & restore active session
