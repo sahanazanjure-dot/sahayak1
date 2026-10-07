@@ -73,20 +73,10 @@
     return R * c;
   }
 
+  // // REAL-LOCATION-FIX: Real Device Hardware Geolocation
   async function getHighAccuracyPosition() {
-    // If Demo Mode is ON, return simulated on-site coordinates
-    if (attendanceState.demoMode) {
-      return {
-        lat: 19.0596 + (Math.random() - 0.5) * 0.0003,
-        lng: 72.8295 + (Math.random() - 0.5) * 0.0003,
-        accuracy: 9.5,
-        isMocked: false,
-        isDemo: true
-      };
-    }
-
     if (!navigator.geolocation) {
-      throw new Error('Geolocation is not supported by your browser.');
+      throw new Error('Geolocation is not supported by your device browser.');
     }
 
     return new Promise((resolve, reject) => {
@@ -1050,11 +1040,25 @@
 
       if (isCheckIn) {
         saveActiveSession(record);
+        // // REAL-LOCATION-FIX: Start continuous high-accuracy live location broadcast
+        if (window.SahayakLocation) {
+          window.SahayakLocation.startVolunteerTracking({
+            volunteerId: record.volunteerId,
+            volunteerName: record.volunteerName,
+            eventId: record.eventId,
+            siteCoordinates: record.siteLocation,
+            allowedRadiusMeters: 100
+          });
+        }
         if (window.SahayakApp && window.SahayakApp.showToast) {
           window.SahayakApp.showToast(`🛡️ Verified Check-In Successful! Trust Score: ${trust.score}% (${trust.level})`, 'success');
         }
       } else {
         saveActiveSession(null);
+        // // REAL-LOCATION-FIX: Stop live location broadcast on checkout
+        if (window.SahayakLocation) {
+          window.SahayakLocation.stopVolunteerTracking();
+        }
         if (window.SahayakApp && window.SahayakApp.showToast) {
           window.SahayakApp.showToast(`🎉 Shift Concluded! 3.5 Verified Hours added to your audit log.`, 'success');
         }

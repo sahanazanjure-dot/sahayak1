@@ -627,10 +627,10 @@
           </div>
 
           <div class="topbar-right">
-            <!-- Live GPS Status -->
+            <!-- // REAL-LOCATION-FIX: Live Dynamic GPS Status -->
             <div class="live-status-chip">
-              <div class="pulse-green-dot"></div>
-              <span id="topbar-location-text">Mumbai (GPS Active)</span>
+              <div class="pulse-green-dot" style="background: #94a3b8; box-shadow: none;"></div>
+              <span id="topbar-location-text">📍 Standby (Waiting for GPS)</span>
             </div>
 
             <!-- Active Deployment Indicator -->
@@ -672,19 +672,21 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- SCRIPTS WITH CACHE BUSTING -->
-  <script src="env.js?v=4.2"></script>
+  <script src="env.js?v=5.0"></script>
   <script src="supabase.min.js"></script>
   <!-- Leaflet.js (Free OpenStreetMap CDN - HTTPS) -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="data.js?v=4.2"></script>
-  <script src="supabase.js?v=4.2"></script>
+  <script src="data.js?v=5.0"></script>
+  <script src="supabase.js?v=5.0"></script>
   <!-- Firebase SDK Compat (Free CDN) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- ATTENDANCE-FEATURE: Firebase & Attendance Engine -->
-  <script src="firebase-config.js?v=4.2"></script>
-  <script src="attendance.js?v=4.2"></script>
-  <script src="app.js?v=4.2"></script>
+  <script src="firebase-config.js?v=5.0"></script>
+  <!-- REAL-LOCATION-FIX: Real-Time GPS Telemetry & Offline Queue Engine -->
+  <script src="real-location.js?v=5.0"></script>
+  <script src="attendance.js?v=5.0"></script>
+  <script src="app.js?v=5.0"></script>
 </body>
 </html>

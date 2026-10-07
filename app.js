@@ -1173,13 +1173,14 @@
     }, 450);
   }
 
+  // // REAL-LOCATION-FIX: Real High-Accuracy Device Geolocation
   function useCurrentLocation() {
     if (!navigator.geolocation) {
-      showToast('Geolocation is not supported by your browser. Using simulated Mumbai coordinates.', 'warning');
+      showToast('Geolocation is not supported by your browser.', 'danger');
       return;
     }
 
-    showToast('Requesting GPS location from browser telemetry...', 'primary');
+    showToast('Acquiring high-accuracy GPS lock from device hardware...', 'primary');
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -1187,69 +1188,62 @@
         const lng = position.coords.longitude;
         const accuracy = Math.round(position.coords.accuracy || 15);
 
-        // Update Rahul's coordinates in state.mapLocations
-        const rahul = (state.mapLocations || []).find(m => m.id === 'map-vol-rahul');
-        if (rahul) {
-          rahul.coordinates = [lat, lng];
-          rahul.location = `Live GPS (${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E)`;
+        // Update real user coordinates in local state
+        const currentLoc = (state.mapLocations || []).find(m => m.isCurrentUser || m.id === 'map-vol-current' || m.id === 'map-vol-rahul');
+        if (currentLoc) {
+          currentLoc.coordinates = [lat, lng];
+          currentLoc.location = `Real GPS (${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E)`;
+          currentLoc.accuracy = accuracy;
         }
 
-        // Refresh all active maps and fly smoothly to user position
+        // Refresh all active maps and fly smoothly to real device position
         Object.keys(activeMapInstances).forEach(id => {
           initOrUpdateLeafletMap(id);
           const map = activeMapInstances[id];
           if (map) {
-            map.flyTo([lat, lng], 14, { duration: 1.2 });
+            map.flyTo([lat, lng], 15, { duration: 1.2 });
           }
         });
 
         // Update topbar location indicator
-        const topbarLoc = document.getElementById('topbar-location-text');
-        if (topbarLoc) {
-          topbarLoc.textContent = `GPS: ${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E (±${accuracy}m)`;
+        if (window.SahayakLocation) {
+          window.SahayakLocation.updateTopbarLocationUI(`📍 Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)} (±${accuracy}m)`, true);
         }
 
-        showToast(`📍 Live GPS locked! Coordinates: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E (±${accuracy}m)`, 'success');
+        showToast(`📍 Real GPS locked! Coordinates: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E (±${accuracy}m accuracy)`, 'success');
       },
       (error) => {
-        let msg = 'Location permission denied or unavailable. Fallback to simulated Mumbai coordinates.';
+        let msg = 'Location access denied. Please grant GPS permission in your browser.';
         if (error.code === error.PERMISSION_DENIED) {
-          msg = 'Location permission was denied. Using simulated Mumbai GPS coordinates.';
+          msg = 'Location permission was denied. Please allow location access in browser settings.';
         } else if (error.code === error.TIMEOUT) {
-          msg = 'Location request timed out. Using default Mumbai coordinates.';
+          msg = 'GPS fix timed out. Move to an area with clear sky view.';
         }
-        showToast(msg, 'warning');
+        showToast(msg, 'danger');
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000
+        timeout: 15000,
+        maximumAge: 0
       }
     );
   }
 
-  function simulateUserInsideGeofence() {
-    const rahul = (state.mapLocations || []).find(m => m.id === 'map-vol-rahul');
-    if (rahul) {
-      rahul.coordinates = [19.1195, 72.8462]; // 14m inside venue
-      rahul.location = 'Andheri West (14m inside venue perimeter)';
-    }
-    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
-    const mainMap = activeMapInstances['sahayak-live-map'];
-    if (mainMap) mainMap.flyTo([19.1195, 72.8462], 15, { duration: 1.0 });
-    showToast('GPS Telemetry Simulated: You are 14m inside Community Health Centre perimeter!', 'success');
+  // // REAL-LOCATION-FIX: Real Map Center & Focus Handlers
+  function focusUserLocation() {
+    useCurrentLocation();
   }
 
-  function simulateUserOutsideGeofence() {
-    const rahul = (state.mapLocations || []).find(m => m.id === 'map-vol-rahul');
-    if (rahul) {
-      rahul.coordinates = [19.1136, 72.8697]; // 2.4 km away
-      rahul.location = 'Andheri West Home (2.4 km from venue)';
+  function focusVenueLocation() {
+    const locations = state.mapLocations || [];
+    const venue = locations.find(l => l.isPrimaryVenue) || locations[0];
+    if (venue && venue.coordinates) {
+      Object.keys(activeMapInstances).forEach(id => {
+        const map = activeMapInstances[id];
+        if (map) map.flyTo(venue.coordinates, 15, { duration: 1.0 });
+      });
+      showToast(`Focused venue: ${venue.title || 'Muster Station'}`, 'primary');
     }
-    Object.keys(activeMapInstances).forEach(id => initOrUpdateLeafletMap(id));
-    const mainMap = activeMapInstances['sahayak-live-map'];
-    if (mainMap) mainMap.flyTo([19.1136, 72.8697], 13, { duration: 1.0 });
-    showToast('GPS Telemetry Simulated: You are 2.4 km away from venue perimeter.', 'warning');
   }
 
   function filterMapLocations(filterType) {
@@ -1350,19 +1344,20 @@
             </button>
           </div>
 
+          <!-- // REAL-LOCATION-FIX: Real Map Telemetry Controls -->
           <div class="sahayak-map-filter-group">
-            <span style="font-weight: 800; color: var(--neutral-500); font-size: 0.72rem; text-transform: uppercase;">Layers &amp; Simulation:</span>
-            <button type="button" id="btn-toggle-geofence" class="sahayak-map-filter-btn ${isGeofenceVisible ? 'active' : ''}" onclick="window.SahayakApp.toggleGeofenceCircle();" title="Toggle 200m venue perimeter">
+            <span style="font-weight: 800; color: var(--neutral-500); font-size: 0.72rem; text-transform: uppercase;">Map Controls:</span>
+            <button type="button" id="btn-toggle-geofence" class="sahayak-map-filter-btn ${isGeofenceVisible ? 'active' : ''}" onclick="window.SahayakApp.toggleGeofenceCircle();" title="Toggle venue perimeter geofence">
               ⭕ 200m Geofence
             </button>
-            <button type="button" id="btn-toggle-radius" class="sahayak-map-filter-btn ${isTravelRadiusVisible ? 'active' : ''}" onclick="window.SahayakApp.toggleTravelRadiusCircle();" title="Toggle 12km Smart Matching radius">
+            <button type="button" id="btn-toggle-radius" class="sahayak-map-filter-btn ${isTravelRadiusVisible ? 'active' : ''}" onclick="window.SahayakApp.toggleTravelRadiusCircle();" title="Toggle matching travel radius">
               ⚡ 12km Radius
             </button>
-            <button type="button" class="sahayak-map-filter-btn" style="background: #f0fdf4; color: #15803d; border-color: #86efac;" onclick="window.SahayakApp.simulateUserInsideGeofence();" title="Simulate being 14m inside venue perimeter">
-              ✓ Test: Inside (14m)
+            <button type="button" class="sahayak-map-filter-btn" style="background: #f0fdf4; color: #15803d; border-color: #86efac;" onclick="window.SahayakApp.useCurrentLocation();" title="Acquire and focus real device GPS">
+              📍 Real GPS Lock
             </button>
-            <button type="button" class="sahayak-map-filter-btn" style="background: #fefce8; color: #a16207; border-color: #fde047;" onclick="window.SahayakApp.simulateUserOutsideGeofence();" title="Simulate being 2.4km from venue">
-              ⚠️ Test: Outside (2.4km)
+            <button type="button" class="sahayak-map-filter-btn" style="background: #f8fafc; color: #334155; border-color: #cbd5e1;" onclick="window.SahayakApp.focusVenueLocation();" title="Focus primary relief venue">
+              🏢 Center Venue
             </button>
           </div>
         </div>
@@ -6954,8 +6949,8 @@
     seedSupabaseData,
     hydrateFromSupabase,
     useCurrentLocation,
-    simulateUserInsideGeofence,
-    simulateUserOutsideGeofence,
+    focusUserLocation,
+    focusVenueLocation,
     filterMapLocations,
     resetMapView,
     toggleGeofenceCircle,
