@@ -1719,7 +1719,7 @@
       <!-- WELCOME HERO BANNER -->
       <section class="welcome-hero">
         <div>
-          <h1 class="welcome-title">Good Morning, ${user.name.split(' ')[0]} 👋</h1>
+          <h1 class="welcome-title">Hello, ${user.name.split(' ')[0]} 👋</h1>
           <p class="welcome-subtitle">Here are the opportunities that match your skills and availability.</p>
         </div>
         <div class="welcome-metrics">
