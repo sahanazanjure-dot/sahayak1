@@ -6,19 +6,21 @@
 (function () {
   'use strict';
 
-  // Deep clone initial state so we can mutate safely
+  // Deep clone initial state safely
+  const initData = (typeof window !== 'undefined' && window.INITIAL_DATA) ? window.INITIAL_DATA : (typeof INITIAL_DATA !== 'undefined' ? INITIAL_DATA : {});
+
   const state = {
     currentRole: 'volunteer', // 'volunteer' | 'ngo' | 'organizer'
-    currentUser: JSON.parse(JSON.stringify(INITIAL_DATA.currentUser)),
-    ngoUser: JSON.parse(JSON.stringify(INITIAL_DATA.ngoUser)),
-    opportunities: JSON.parse(JSON.stringify(INITIAL_DATA.opportunities)),
-    activeDeployment: JSON.parse(JSON.stringify(INITIAL_DATA.activeDeployment)),
-    ngoVolunteers: JSON.parse(JSON.stringify(INITIAL_DATA.ngoVolunteers)),
-    emergencyAlerts: JSON.parse(JSON.stringify(INITIAL_DATA.emergencyAlerts)),
-    ngoEvents: JSON.parse(JSON.stringify(INITIAL_DATA.ngoEvents)),
-    analytics: JSON.parse(JSON.stringify(INITIAL_DATA.analytics)),
-    settings: JSON.parse(JSON.stringify(INITIAL_DATA.settings)),
-    mapLocations: JSON.parse(JSON.stringify(INITIAL_DATA.mapLocations || [])),
+    currentUser: JSON.parse(JSON.stringify(initData.currentUser || {})),
+    ngoUser: JSON.parse(JSON.stringify(initData.ngoUser || {})),
+    opportunities: JSON.parse(JSON.stringify(initData.opportunities || [])),
+    activeDeployment: JSON.parse(JSON.stringify(initData.activeDeployment || { status: 'MATCHED' })),
+    ngoVolunteers: JSON.parse(JSON.stringify(initData.ngoVolunteers || [])),
+    emergencyAlerts: JSON.parse(JSON.stringify(initData.emergencyAlerts || [])),
+    ngoEvents: JSON.parse(JSON.stringify(initData.ngoEvents || [])),
+    analytics: JSON.parse(JSON.stringify(initData.analytics || {})),
+    settings: JSON.parse(JSON.stringify(initData.settings || {})),
+    mapLocations: JSON.parse(JSON.stringify(initData.mapLocations || [])),
 
     // Navigation state
     activePage: 'dashboard', // dashboard, profile, opportunities, smart-match, event-details, deployments, emergency, analytics, settings, ngo-volunteers

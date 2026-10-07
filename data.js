@@ -761,3 +761,7 @@ const INITIAL_DATA = {
     }
   ]
 };
+
+if (typeof window !== 'undefined') {
+  window.INITIAL_DATA = INITIAL_DATA;
+}
