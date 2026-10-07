@@ -9,7 +9,7 @@ const INITIAL_DATA = {
     mobile: "+91 98204 88321",
     avatar: "RS",
     role: "volunteer", // 'volunteer' | 'ngo' | 'organizer'
-    identityVerified: true, // Prototype Volunteer Identity Verification
+    identityVerified: false, // Starts unverified so user can test the verification flow
     location: "Andheri West, Mumbai",
     coordinates: { lat: 19.1136, lng: 72.8697 },
     bio: "Certified First Aid provider and disaster management enthusiast with 3+ years active field service across Mumbai & Western Maharashtra.",
@@ -324,7 +324,7 @@ const INITIAL_DATA = {
       availability: "Weekends & Evenings",
       matchScore: 92,
       reliabilityScore: 98,
-      identityVerified: true,
+      identityVerified: false,
       status: "Matched", // Available, Matched, Deployed, Completed
       assignedEvent: "Medical Relief Camp",
       hoursContributed: 142

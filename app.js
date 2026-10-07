@@ -299,7 +299,7 @@
               <span class="demo-prototype-pill amber" style="font-size: 0.68rem; padding: 2px 8px; margin-bottom: 2px;">
                 ● DEMO VERIFICATION
               </span>
-              <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">Identity Verification</h3>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">OTP Verification</h3>
             </div>
           </div>
           <button onclick="window.SahayakApp.closeModal();" style="color: #fff; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;">✕</button>
@@ -307,24 +307,24 @@
 
         <div class="modal-body" style="padding: 24px;" id="verification-modal-content">
           <p style="font-size: 0.88rem; color: var(--neutral-600); margin-bottom: 12px; line-height: 1.5;">
-            Enter the 6-digit simulated OTP sent to your registered mobile ending in <strong>•••321</strong> to complete your volunteer credentialing.
+            For this prototype, enter the demo OTP sent to your registered mobile number.
           </p>
 
           <!-- PROMINENT DEMO OTP BOX -->
           <div class="demo-otp-callout">
             <div>
-              <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #0369a1; letter-spacing: 0.04em;">Simulated Demo OTP</div>
+              <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #0369a1; letter-spacing: 0.04em;">Demo OTP: 123456</div>
               <div class="demo-otp-code-pill" style="margin-top: 4px;">123456</div>
             </div>
             <button type="button" class="btn btn-sm btn-primary" style="font-size: 0.76rem; padding: 6px 12px;" onclick="window.SahayakApp.fillSampleOtp();">
-              ⚡ Auto-Fill Code
+              ⚡ Auto-Fill 123456
             </button>
           </div>
 
           <form id="form-verify-otp" onsubmit="event.preventDefault(); window.SahayakApp.submitIdentityVerificationOtp();">
             <div style="margin: 20px 0 16px 0;">
               <label class="form-label" style="text-align: center; display: block; font-weight: 700; color: var(--primary-900);">
-                Enter 6-Digit Verification Code:
+                Enter 6-Digit OTP:
               </label>
               <div class="otp-input-group">
                 <input type="text" maxlength="1" class="otp-box-input" id="otp-digit-1" oninput="window.SahayakApp.handleOtpDigitInput(this, 'otp-digit-2')" onkeydown="window.SahayakApp.handleOtpDigitBack(event, this, null)" autofocus />
@@ -341,7 +341,7 @@
 
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 20px; font-size: 0.76rem; color: var(--neutral-500); display: flex; align-items: center; gap: 8px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span><strong>Privacy Notice:</strong> Hackathon prototype demonstration only. No real UIDAI network request or biometric authentication is executed.</span>
+              <span><strong>Privacy Notice:</strong> Hackathon prototype demonstration only. No real UIDAI network request or real Aadhaar data is processed.</span>
             </div>
 
             <div style="display: flex; gap: 10px; justify-content: space-between;">
@@ -352,8 +352,8 @@
                 <button type="button" class="btn btn-secondary" style="font-size: 0.82rem;" onclick="window.SahayakApp.resendDemoOtp();">
                   ↻ Resend OTP
                 </button>
-                <button type="submit" id="btn-submit-otp" class="btn btn-primary" style="font-weight: 800; padding: 10px 20px; background: linear-gradient(135deg, #0284c7, #0369a1);">
-                  Verify &amp; Confirm Identity →
+                <button type="submit" id="btn-submit-otp" class="btn btn-primary" style="font-weight: 800; padding: 10px 22px; background: linear-gradient(135deg, #0284c7, #0369a1);">
+                  Verify OTP →
                 </button>
               </div>
             </div>
@@ -435,13 +435,13 @@
           <h3 style="font-size: 1.35rem; font-weight: 900; color: #065f46; margin: 8px 0 6px 0;">
             ✓ Identity Verified
           </h3>
-          <p style="font-size: 0.9rem; color: var(--neutral-600); max-width: 400px; margin: 0 auto 20px auto; line-height: 1.5;">
-            Your identity has been successfully validated. Your official <strong>✓ Identity Verified</strong> badge is now active and visible to all NGOs and coordinators.
+          <p style="font-size: 0.95rem; color: var(--neutral-700); max-width: 420px; margin: 0 auto 20px auto; line-height: 1.5; font-weight: 600;">
+            Your identity verification is complete.
           </p>
           <div style="background: #f0fdf4; border: 1.5px solid #a7f3d0; border-radius: var(--radius-md); padding: 12px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px;">
             <span class="ngo-verified-badge" style="font-size: 0.84rem; padding: 4px 12px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              ✓ Identity Verified
+              ✓ Certified Volunteer
             </span>
             <span style="font-size: 0.78rem; color: #047857; font-weight: 700;">Visible across NGO Dashboard &amp; Dispatch Rosters</span>
           </div>
@@ -553,7 +553,7 @@
       state.currentRole = role || 'volunteer';
       if (isDemoVolunteer) {
         state.currentUser = JSON.parse(JSON.stringify(INITIAL_DATA.currentUser));
-        state.currentUser.identityVerified = isVolunteerIdentityVerified('vol-rahul-01', true);
+        state.currentUser.identityVerified = isVolunteerIdentityVerified('vol-rahul-01', false);
         state.scheduledTasks = JSON.parse(JSON.stringify(INITIAL_DATA.scheduledTasks || []));
         state.activeDeployment = JSON.parse(JSON.stringify(INITIAL_DATA.activeDeployment));
       } else {
@@ -2067,14 +2067,14 @@
   ======================================================== */
   function renderVolunteerProfile() {
     const user = state.currentUser;
-    const isVerified = isVolunteerIdentityVerified(user.id || user.email, user.identityVerified !== undefined ? user.identityVerified : true);
+    const isVerified = isVolunteerIdentityVerified(user.id || user.email, user.identityVerified !== undefined ? user.identityVerified : false);
 
     return `
       <!-- PROFILE TOP HERO -->
       <section class="profile-hero-card">
         <div class="profile-avatar-large">
           ${user.avatar}
-          <div class="profile-verified-badge" title="${isVerified ? 'Identity & Red Cross Verified' : 'Identity Unverified'}" style="${isVerified ? '' : 'background: #94a3b8;'}">
+          <div class="profile-verified-badge" title="${isVerified ? 'Identity Verified & Certified' : 'Verification Pending'}" style="${isVerified ? '' : 'background: #f59e0b;'}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
         </div>
@@ -2082,15 +2082,15 @@
         <div class="profile-details-block">
           <div class="profile-name-row">
             <h1 class="profile-name">${user.name}</h1>
-            <span class="badge badge-success">✓ Certified Volunteer</span>
             ${isVerified ? `
+              <span class="badge badge-success" style="font-weight: 700;">✓ Certified Volunteer</span>
               <span class="ngo-verified-badge" style="font-size: 0.78rem; padding: 4px 10px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 ✓ Identity Verified
               </span>
             ` : `
-              <span class="badge badge-neutral" style="font-size: 0.78rem;">
-                Identity Unverified
+              <span class="badge badge-warning" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700;">
+                Verification Pending
               </span>
             `}
             <span class="badge badge-primary">ID: #SHK-9842</span>
@@ -2126,8 +2126,8 @@
               `}
             </div>
             <div>
-              <h3 class="verification-card-title">Identity Verification</h3>
-              <p class="verification-card-subtitle">Verify your identity to build trust with NGOs and organizers.</p>
+              <h3 class="verification-card-title">Verify Your Identity</h3>
+              <p class="verification-card-subtitle">Complete verification to receive your Verified Volunteer badge.</p>
             </div>
           </div>
 
@@ -2151,14 +2151,16 @@
               </div>
               <div>
                 <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge badge-success" style="font-size: 0.88rem; padding: 4px 10px; font-weight: 700;">
+                    ✓ Certified Volunteer
+                  </span>
                   <span class="ngo-verified-badge" style="font-size: 0.88rem; padding: 4px 10px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     ✓ Identity Verified
                   </span>
-                  <span style="font-size: 0.78rem; color: #047857; font-weight: 700;">(Demo Aadhaar Authentication)</span>
                 </div>
                 <div style="font-size: 0.82rem; color: var(--neutral-600); margin-top: 4px;">
-                  Your verified identity credential is encrypted and securely linked to your volunteer profile. NGOs and dispatch supervisors see your verified status badge during deployment selection.
+                  Your identity verification is complete. Your verified badge is actively displayed to NGOs and coordinators across all relief drives.
                 </div>
               </div>
             </div>
@@ -2202,7 +2204,7 @@
 
               <div>
                 <button type="button" class="btn btn-primary" style="padding: 10px 22px; font-weight: 800; background: linear-gradient(135deg, var(--primary-800), var(--primary-600));" onclick="window.SahayakApp.verifyAadhaarIdentity();">
-                  Verify Identity →
+                  Verify Identity
                 </button>
               </div>
             </div>
@@ -5177,9 +5179,13 @@
                           ${isRankedVerified ? `
                             <span class="ngo-verified-badge" style="font-size: 0.68rem; padding: 2px 6px;">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                              ✓ Identity Verified
+                              ✓ Certified Volunteer
                             </span>
-                          ` : ''}
+                          ` : `
+                            <span class="badge badge-warning" style="font-size: 0.65rem; padding: 2px 6px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                              Verification Pending
+                            </span>
+                          `}
                         </div>
                         <div style="font-size: 0.75rem; color: var(--neutral-500);">${vol.role || 'Verified Responder'}</div>
                       </div>
@@ -5428,11 +5434,15 @@
                         <div style="font-weight: 700; color: var(--neutral-900); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                           <span>${v.name}</span>
                           ${isVolVerified ? `
-                            <span class="ngo-verified-badge" title="Identity Verified by Sahayak">
+                            <span class="ngo-verified-badge" title="Certified & Verified Volunteer">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                              ✓ Identity Verified
+                              ✓ Certified Volunteer
                             </span>
-                          ` : ''}
+                          ` : `
+                            <span class="badge badge-warning" style="font-size: 0.68rem; padding: 2px 6px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                              Verification Pending
+                            </span>
+                          `}
                         </div>
                         <div style="font-size: 0.74rem; color: var(--neutral-500);">${v.hoursContributed || 0} hrs served</div>
                       </div>
