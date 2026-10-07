@@ -6721,26 +6721,48 @@
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-              <div class="form-group">
-                <label class="form-label" for="enroll-ngo-sector">Primary Cause / Sector *</label>
-                <select id="enroll-ngo-sector" class="form-input" required>
-                  <option value="Disaster Relief & Emergency">Disaster Relief &amp; Emergency</option>
-                  <option value="Healthcare & Medical Camps">Healthcare &amp; Medical Camps</option>
-                  <option value="Food Distribution & Hunger Relief">Food Distribution &amp; Hunger Relief</option>
-                  <option value="Child Education & Youth Welfare">Child Education &amp; Youth Welfare</option>
-                  <option value="Environmental & Animal Care">Environmental &amp; Animal Care</option>
-                </select>
+            <div class="form-group">
+              <label class="form-label">Primary Causes / Focus Sectors * <span style="font-size: 0.75rem; color: var(--neutral-500); font-weight: normal;">(Select all that apply)</span></label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: var(--neutral-50); border-radius: var(--radius-md); border: 1px solid var(--neutral-200);">
+                <label class="checkbox-label" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" name="ngo-sectors" value="Disaster Relief & Emergency" checked />
+                  <span>Disaster Relief &amp; Emergency</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" name="ngo-sectors" value="Healthcare & Medical Camps" />
+                  <span>Healthcare &amp; Medical Camps</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" name="ngo-sectors" value="Food Distribution & Hunger Relief" />
+                  <span>Food Distribution &amp; Hunger Relief</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" name="ngo-sectors" value="Child Education & Youth Welfare" />
+                  <span>Child Education &amp; Youth Welfare</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" name="ngo-sectors" value="Environmental & Animal Care" />
+                  <span>Environmental &amp; Animal Care</span>
+                </label>
+                <label class="checkbox-label" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" name="ngo-sectors" value="Other" id="enroll-ngo-sector-other-cb" onchange="const el = document.getElementById('ngo-other-sector-container'); if(el) el.style.display = this.checked ? 'block' : 'none';" />
+                  <span>Other</span>
+                </label>
               </div>
+              <div id="ngo-other-sector-container" style="display: none; margin-top: 8px;">
+                <input type="text" id="enroll-ngo-sector-other" class="form-input" placeholder="Specify other cause / sector..." />
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
               <div class="form-group">
                 <label class="form-label" for="enroll-ngo-location">Headquarters / City *</label>
                 <input type="text" id="enroll-ngo-location" class="form-input" placeholder="e.g. Fort, Mumbai, MH" required />
               </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="enroll-ngo-website">Website or Portal URL</label>
-              <input type="url" id="enroll-ngo-website" class="form-input" placeholder="https://sevabharat.ngo" />
+              <div class="form-group">
+                <label class="form-label" for="enroll-ngo-website">Website or Portal URL</label>
+                <input type="url" id="enroll-ngo-website" class="form-input" placeholder="https://sevabharat.ngo" />
+              </div>
             </div>
 
             <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -6762,12 +6784,24 @@
     const email = document.getElementById('enroll-ngo-email')?.value.trim();
     const password = document.getElementById('enroll-ngo-password')?.value.trim();
     const mobile = document.getElementById('enroll-ngo-mobile')?.value.trim();
-    const sector = document.getElementById('enroll-ngo-sector')?.value;
+    const checkedSectors = Array.from(document.querySelectorAll('input[name="ngo-sectors"]:checked')).map(cb => {
+      if (cb.value === 'Other') {
+        const customText = document.getElementById('enroll-ngo-sector-other')?.value.trim();
+        return customText ? customText : 'Other';
+      }
+      return cb.value;
+    });
+    const sector = checkedSectors.join(', ');
     const location = document.getElementById('enroll-ngo-location')?.value.trim();
     const website = document.getElementById('enroll-ngo-website')?.value.trim();
 
     if (!orgName || !email || !password) {
       showToast('Please fill all required fields.', 'danger');
+      return;
+    }
+
+    if (checkedSectors.length === 0) {
+      showToast('Please select at least one cause / sector.', 'danger');
       return;
     }
 
